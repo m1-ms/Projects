@@ -6,6 +6,7 @@ import com.restaurant.management.dto.response.CategoryResponse;
 import com.restaurant.management.dto.response.PageResponse;
 import com.restaurant.management.entity.Category;
 import com.restaurant.management.exception.DuplicateResourceException;
+import com.restaurant.management.exception.EmptyResultException;
 import com.restaurant.management.exception.InvalidRequestException;
 import com.restaurant.management.exception.ResourceNotFoundException;
 import com.restaurant.management.mapper.CategoryMapper;
@@ -45,6 +46,19 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getById(Long id) {
         return categoryMapper.toResponse(findOrThrow(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<CategoryResponse> search(Long id, String key, int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
+        Page<CategoryResponse> result = categoryRepository.search(id, normalizedKey, pageable)
+                .map(categoryMapper::toResponse);
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("category.search.empty");
+        }
+        return PageResponse.from(result);
     }
 
     @Override

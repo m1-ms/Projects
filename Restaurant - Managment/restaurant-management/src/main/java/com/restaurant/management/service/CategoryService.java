@@ -24,4 +24,7 @@ public interface CategoryService {
     void delete(Long id);
 
     void deleteAll(List<Long> ids);
+
+    PageResponse<CategoryResponse> search(Long id, String key, int page, int size);
+
 }
