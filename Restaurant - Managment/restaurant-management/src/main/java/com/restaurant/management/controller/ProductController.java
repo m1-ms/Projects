@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,16 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success(
                 messages.get("success.retrieved"), productService.getAll(page, size)));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> search(
+            @RequestParam(required = false) @Size(max = 100, message = "{product.key.size}") String key,
+            @RequestParam(required = false) @Positive(message = "{category.id.invalid}") Long categoryId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"), productService.search(categoryId, key, page, size)));
     }
 
     @GetMapping("/category/{categoryId}")

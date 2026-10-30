@@ -60,6 +60,22 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> search(Long categoryId, String key, int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        if (categoryId != null) {
+            findCategoryOrThrow(categoryId);
+        }
+        String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
+        Page<ProductResponse> result = productRepository.search(categoryId, normalizedKey, pageable)
+                .map(productMapper::toResponse);
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("product.empty");
+        }
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProductResponse getById(Long id) {
         return productMapper.toResponse(findOrThrow(id));
     }
