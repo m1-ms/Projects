@@ -14,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import jakarta.validation.ConstraintViolationException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,6 +54,15 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, messages.get("error.missing.param", ex.getParameterName()), null);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(violation -> {
+            String path = violation.getPropertyPath().toString();
+            errors.putIfAbsent(path.substring(path.indexOf('.') + 1), violation.getMessage());
+        });
+        return build(HttpStatus.BAD_REQUEST, messages.get("error.validation"), errors);
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         if (ex instanceof ErrorResponse errorResponse) {
