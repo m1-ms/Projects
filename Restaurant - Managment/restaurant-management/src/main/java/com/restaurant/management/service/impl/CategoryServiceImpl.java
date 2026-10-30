@@ -9,8 +9,10 @@ import com.restaurant.management.exception.DuplicateResourceException;
 import com.restaurant.management.exception.EmptyResultException;
 import com.restaurant.management.exception.InvalidRequestException;
 import com.restaurant.management.exception.ResourceNotFoundException;
+import com.restaurant.management.exception.ResourceInUseException;
 import com.restaurant.management.mapper.CategoryMapper;
 import com.restaurant.management.repository.CategoryRepository;
+import com.restaurant.management.repository.ProductRepository;
 import com.restaurant.management.service.CategoryService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -116,7 +119,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void delete(Long id) {
-        categoryRepository.delete(findOrThrow(id));
+        Category category = findOrThrow(id);
+        assertNotInUse(category);
+        categoryRepository.delete(category);
     }
 
     @Override
@@ -132,6 +137,7 @@ public class CategoryServiceImpl implements CategoryService {
                     .collect(Collectors.joining(", "));
             throw new ResourceNotFoundException("category.notfound", missing);
         }
+        found.forEach(this::assertNotInUse);
         categoryRepository.deleteAll(found);
     }
 
@@ -149,6 +155,12 @@ public class CategoryServiceImpl implements CategoryService {
     private void assertNameAvailableForUpdate(String name, Long id) {
         if (categoryRepository.existsByNameIgnoreCaseAndIdNot(name.trim(), id)) {
             throw new DuplicateResourceException("category.duplicate", name.trim());
+        }
+    }
+
+    private void assertNotInUse(Category category) {
+        if (productRepository.existsByCategoryId(category.getId())) {
+            throw new ResourceInUseException("category.in.use", category.getName());
         }
     }
 
