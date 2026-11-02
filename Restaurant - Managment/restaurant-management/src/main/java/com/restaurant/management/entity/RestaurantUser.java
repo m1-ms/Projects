@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -45,4 +46,7 @@ public class RestaurantUser extends BaseAuditEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<RestaurantRole> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<ContactInfo> contactInfos = new HashSet<>();
 }

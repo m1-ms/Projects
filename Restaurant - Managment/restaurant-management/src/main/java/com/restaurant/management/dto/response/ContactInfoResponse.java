@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 public class ContactInfoResponse {
 
     private final Long id;
+    private final Long userId;
+    private final String username;
     private final String name;
     private final String email;
     private final String subject;

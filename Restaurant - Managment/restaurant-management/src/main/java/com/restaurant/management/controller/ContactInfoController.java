@@ -44,6 +44,14 @@ public class ContactInfoController {
                 messages.get("success.retrieved"), contactInfoService.getAll(page, size)));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<PageResponse<ContactInfoResponse>>> getMine(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"), contactInfoService.getMine(page, size)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ContactInfoResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(

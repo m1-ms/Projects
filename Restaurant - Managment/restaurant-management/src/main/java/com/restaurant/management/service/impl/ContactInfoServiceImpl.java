@@ -4,9 +4,11 @@ import com.restaurant.management.dto.request.ContactInfoRequest;
 import com.restaurant.management.dto.response.ContactInfoResponse;
 import com.restaurant.management.dto.response.PageResponse;
 import com.restaurant.management.entity.ContactInfo;
+import com.restaurant.management.entity.RestaurantUser;
 import com.restaurant.management.exception.ResourceNotFoundException;
 import com.restaurant.management.mapper.ContactInfoMapper;
 import com.restaurant.management.repository.ContactInfoRepository;
+import com.restaurant.management.security.CurrentUserService;
 import com.restaurant.management.service.ContactInfoService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +24,13 @@ public class ContactInfoServiceImpl implements ContactInfoService {
 
     private final ContactInfoRepository contactInfoRepository;
     private final ContactInfoMapper contactInfoMapper;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional
     public ContactInfoResponse save(ContactInfoRequest request) {
-        ContactInfo saved = contactInfoRepository.save(contactInfoMapper.toEntity(request));
+        RestaurantUser sender = currentUserService.getCurrentUser();
+        ContactInfo saved = contactInfoRepository.save(contactInfoMapper.toEntity(request, sender));
         return contactInfoMapper.toResponse(saved);
     }
 
@@ -35,6 +39,16 @@ public class ContactInfoServiceImpl implements ContactInfoService {
     public PageResponse<ContactInfoResponse> getAll(int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
         Page<ContactInfoResponse> result = contactInfoRepository.findAll(pageable)
+                .map(contactInfoMapper::toResponse);
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ContactInfoResponse> getMine(int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        RestaurantUser user = currentUserService.getCurrentUser();
+        Page<ContactInfoResponse> result = contactInfoRepository.findByUserId(user.getId(), pageable)
                 .map(contactInfoMapper::toResponse);
         return PageResponse.from(result);
     }

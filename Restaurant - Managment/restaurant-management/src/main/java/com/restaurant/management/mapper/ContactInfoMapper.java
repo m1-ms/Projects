@@ -3,23 +3,27 @@ package com.restaurant.management.mapper;
 import com.restaurant.management.dto.request.ContactInfoRequest;
 import com.restaurant.management.dto.response.ContactInfoResponse;
 import com.restaurant.management.entity.ContactInfo;
+import com.restaurant.management.entity.RestaurantUser;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ContactInfoMapper {
 
-    public ContactInfo toEntity(ContactInfoRequest request) {
+    public ContactInfo toEntity(ContactInfoRequest request, RestaurantUser sender) {
         ContactInfo contactInfo = new ContactInfo();
         contactInfo.setName(request.getName().trim());
         contactInfo.setEmail(request.getEmail().trim());
         contactInfo.setSubject(request.getSubject().trim());
         contactInfo.setMessage(request.getMessage().trim());
+        contactInfo.setUser(sender);
         return contactInfo;
     }
 
     public ContactInfoResponse toResponse(ContactInfo contactInfo) {
         return ContactInfoResponse.builder()
                 .id(contactInfo.getId())
+                .userId(contactInfo.getUser().getId())
+                .username(contactInfo.getUser().getUsername())
                 .name(contactInfo.getName())
                 .email(contactInfo.getEmail())
                 .subject(contactInfo.getSubject())

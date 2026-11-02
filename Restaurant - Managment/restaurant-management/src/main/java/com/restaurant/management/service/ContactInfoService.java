@@ -10,6 +10,8 @@ public interface ContactInfoService {
 
     PageResponse<ContactInfoResponse> getAll(int page, int size);
 
+    PageResponse<ContactInfoResponse> getMine(int page, int size);
+
     ContactInfoResponse getById(Long id);
 
     void delete(Long id);
