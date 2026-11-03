@@ -49,4 +49,7 @@ public class RestaurantUser extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "user")
     private Set<ContactInfo> contactInfos = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<RestaurantOrder> orders = new HashSet<>();
 }

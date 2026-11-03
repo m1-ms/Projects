@@ -8,10 +8,12 @@ import com.restaurant.management.entity.Category;
 import com.restaurant.management.entity.Product;
 import com.restaurant.management.exception.EmptyResultException;
 import com.restaurant.management.exception.InvalidRequestException;
+import com.restaurant.management.exception.ResourceInUseException;
 import com.restaurant.management.exception.ResourceNotFoundException;
 import com.restaurant.management.mapper.ProductMapper;
 import com.restaurant.management.repository.CategoryRepository;
 import com.restaurant.management.repository.ProductRepository;
+import com.restaurant.management.repository.RestaurantOrderRepository;
 import com.restaurant.management.service.ProductService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
+    private final RestaurantOrderRepository orderRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -133,13 +136,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void delete(Long id) {
-        productRepository.delete(findOrThrow(id));
+        Product product = findOrThrow(id);
+        assertNotOrdered(product);
+        productRepository.delete(product);
     }
 
     @Override
     @Transactional
     public void deleteAll(List<Long> ids) {
         Map<Long, Product> products = loadProducts(new HashSet<>(ids));
+        products.values().forEach(this::assertNotOrdered);
         productRepository.deleteAll(products.values());
     }
 
@@ -151,6 +157,12 @@ public class ProductServiceImpl implements ProductService {
     private Category findCategoryOrThrow(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("category.notfound", String.valueOf(id)));
+    }
+
+    private void assertNotOrdered(Product product) {
+        if (orderRepository.existsByProductsId(product.getId())) {
+            throw new ResourceInUseException("product.in.use", product.getName());
+        }
     }
 
     private Map<Long, Category> loadCategories(List<Long> ids) {
