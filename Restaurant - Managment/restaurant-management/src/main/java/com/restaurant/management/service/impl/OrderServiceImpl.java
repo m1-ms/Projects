@@ -1,11 +1,13 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.OrderRequest;
 import com.restaurant.management.dto.response.OrderResponse;
 import com.restaurant.management.dto.response.PageResponse;
 import com.restaurant.management.entity.Product;
 import com.restaurant.management.entity.RestaurantOrder;
 import com.restaurant.management.entity.RestaurantUser;
+import com.restaurant.management.exception.EmptyResultException;
 import com.restaurant.management.exception.InvalidRequestException;
 import com.restaurant.management.exception.ResourceNotFoundException;
 import com.restaurant.management.mapper.OrderMapper;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,6 +117,20 @@ public class OrderServiceImpl implements OrderService {
         RestaurantOrder order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("order.notfound", String.valueOf(id)));
         return orderMapper.toResponse(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<OrderResponse> searchOrders(AuditSearchCriteria criteria, int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        criteria.validate();
+        Specification<RestaurantOrder> specification = com.restaurant.management.repository.specification.AuditSpecifications.matching(criteria);
+        Page<OrderResponse> result = orderRepository.findAll(specification, pageable)
+                .map(orderMapper::toResponse);
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("order.search.empty");
+        }
+        return PageResponse.from(result);
     }
 
     private String generateCode() {
