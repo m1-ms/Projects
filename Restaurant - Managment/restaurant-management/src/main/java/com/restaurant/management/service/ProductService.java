@@ -1,5 +1,6 @@
 package com.restaurant.management.service;
 
+import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.ProductRequest;
 import com.restaurant.management.dto.request.ProductUpdateRequest;
 import com.restaurant.management.dto.response.PageResponse;
@@ -29,4 +30,5 @@ public interface ProductService {
 
     PageResponse<ProductResponse> search(Long categoryId, String key, int page, int size);
 
+    PageResponse<ProductResponse> auditSearch(AuditSearchCriteria criteria, String key, Long categoryId, int page, int size);
 }

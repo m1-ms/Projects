@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.CategoryRequest;
 import com.restaurant.management.dto.request.CategoryUpdateRequest;
 import com.restaurant.management.dto.response.CategoryResponse;
@@ -13,12 +14,15 @@ import com.restaurant.management.exception.ResourceInUseException;
 import com.restaurant.management.mapper.CategoryMapper;
 import com.restaurant.management.repository.CategoryRepository;
 import com.restaurant.management.repository.ProductRepository;
+import com.restaurant.management.repository.specification.AuditSpecifications;
+import com.restaurant.management.repository.specification.CategorySpecifications;
 import com.restaurant.management.service.CategoryService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +61,22 @@ public class CategoryServiceImpl implements CategoryService {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
         String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
         Page<CategoryResponse> result = categoryRepository.search(id, normalizedKey, pageable)
+                .map(categoryMapper::toResponse);
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("category.search.empty");
+        }
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<CategoryResponse> auditSearch(AuditSearchCriteria criteria, String key, int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        criteria.validate();
+        String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
+        Specification<Category> specification = AuditSpecifications.<Category>matching(criteria)
+                .and(CategorySpecifications.nameContains(normalizedKey));
+        Page<CategoryResponse> result = categoryRepository.findAll(specification, pageable)
                 .map(categoryMapper::toResponse);
         if (result.getTotalElements() == 0) {
             throw new EmptyResultException("category.search.empty");

@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.ProductRequest;
 import com.restaurant.management.dto.request.ProductUpdateRequest;
 import com.restaurant.management.dto.response.PageResponse;
@@ -14,12 +15,15 @@ import com.restaurant.management.mapper.ProductMapper;
 import com.restaurant.management.repository.CategoryRepository;
 import com.restaurant.management.repository.ProductRepository;
 import com.restaurant.management.repository.RestaurantOrderRepository;
+import com.restaurant.management.repository.specification.AuditSpecifications;
+import com.restaurant.management.repository.specification.ProductSpecifications;
 import com.restaurant.management.service.ProductService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +74,26 @@ public class ProductServiceImpl implements ProductService {
         }
         String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
         Page<ProductResponse> result = productRepository.search(categoryId, normalizedKey, pageable)
+                .map(productMapper::toResponse);
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("product.empty");
+        }
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> auditSearch(AuditSearchCriteria criteria, String key, Long categoryId,
+                                                     int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        criteria.validate();
+        if (categoryId != null) {
+            findCategoryOrThrow(categoryId);
+        }
+        String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
+        Specification<Product> specification = AuditSpecifications.<Product>matching(criteria)
+                .and(ProductSpecifications.matching(normalizedKey, categoryId));
+        Page<ProductResponse> result = productRepository.findAll(specification, pageable)
                 .map(productMapper::toResponse);
         if (result.getTotalElements() == 0) {
             throw new EmptyResultException("product.empty");

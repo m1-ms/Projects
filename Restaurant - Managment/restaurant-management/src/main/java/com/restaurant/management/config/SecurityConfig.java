@@ -54,10 +54,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
-                .authorizeHttpRequests(auth -> auth
+                        .accessDeniedHandler(accessDeniedHandler)).authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**", "/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/audit-search", "/api/categories/audit-search").hasRole(admin)
                         .requestMatchers(HttpMethod.GET, CATALOG_PATHS).hasAnyRole(user, admin)
                         .requestMatchers(HttpMethod.POST, "/api/contact-info").hasAnyRole(user, admin)
                         .requestMatchers(HttpMethod.GET, "/api/contact-info/my").hasAnyRole(user, admin)

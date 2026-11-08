@@ -1,5 +1,6 @@
 package com.restaurant.management.controller;
 
+import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.ProductRequest;
 import com.restaurant.management.dto.request.ProductUpdateRequest;
 import com.restaurant.management.dto.response.ApiResponse;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Validated
@@ -53,6 +56,25 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success(
                 messages.get("success.retrieved"), productService.search(categoryId, key, page, size)));
+    }
+
+    @GetMapping("/audit-search")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> auditSearch(
+            @RequestParam(required = false) @Size(max = 100, message = "{product.key.size}") String key,
+            @RequestParam(required = false) @Positive(message = "{category.id.invalid}") Long categoryId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedTo,
+            @RequestParam(required = false) @Size(max = 50, message = "{search.user.size}") String createdBy,
+            @RequestParam(required = false) @Size(max = 50, message = "{search.user.size}") String updatedBy,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        AuditSearchCriteria criteria = new AuditSearchCriteria(
+                createdFrom, createdTo, updatedFrom, updatedTo, createdBy, updatedBy);
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                productService.auditSearch(criteria, key, categoryId, page, size)));
     }
 
     @GetMapping("/category/{categoryId}")
