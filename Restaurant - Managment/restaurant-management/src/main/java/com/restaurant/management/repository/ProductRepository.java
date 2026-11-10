@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -42,4 +43,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                    or lower(p.description) like lower(concat('%', :key, '%')))
             """)
     Page<Product> search(@Param("categoryId") Long categoryId, @Param("key") String key, Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    List<Product> findTop5ByOrderByIdDesc();
+
 }
