@@ -1,0 +1,366 @@
+<div class="products-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">CATALOG MANAGEMENT</span>
+      <h1>Products Management</h1>
+      <p>Manage your restaurant menu, products and availability.</p>
+    </div>
+
+    <button class="add-button" (click)="openAddModal()">
+      <span>+</span>
+      Add New Product
+    </button>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--primary">▦</div>
+      <div>
+        <span>Total Products</span>
+        <h2>{{ totalProducts }}</h2>
+        <small>All menu products</small>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--success">✓</div>
+      <div>
+        <span>Active Products</span>
+        <h2>{{ activeProducts }}</h2>
+        <small>Available in menu</small>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--warning">◷</div>
+      <div>
+        <span>Inactive Products</span>
+        <h2>{{ inactiveProducts }}</h2>
+        <small>Currently unavailable</small>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--info">★</div>
+      <div>
+        <span>Featured Products</span>
+        <h2>{{ featuredProducts }}</h2>
+        <small>Highlighted products</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Products Content -->
+  <section class="products-content">
+
+    <div class="content-header">
+      <div>
+        <h2>All Products</h2>
+        <p>View, search and manage your restaurant products.</p>
+      </div>
+
+      <div class="filters">
+
+        <div class="search-box">
+          <span>⌕</span>
+          <input
+            type="text"
+            placeholder="Search products..."
+            [(ngModel)]="searchTerm"
+          />
+        </div>
+
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedCategory"
+        >
+          <option value="All">All Categories</option>
+          @for (category of categories; track category) {
+            <option [value]="category">{{ category }}</option>
+          }
+        </select>
+
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedStatus"
+        >
+          <option value="All">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Featured</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+          @for (product of filteredProducts; track product.id) {
+            <tr>
+
+              <td>
+                <div class="product-info">
+                  <img
+                    [src]="product.image"
+                    [alt]="product.name"
+                  />
+
+                  <div>
+                    <strong>{{ product.name }}</strong>
+                    <span>{{ product.description }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="category-badge">
+                  {{ product.category }}
+                </span>
+              </td>
+
+              <td>
+                <strong class="product-price">
+                  ${{ product.price.toFixed(2) }}
+                </strong>
+              </td>
+
+              <td>
+                <button
+                  class="featured-toggle"
+                  [class.featured-toggle--active]="product.featured"
+                  (click)="toggleFeatured(product)"
+                  [title]="product.featured ? 'Remove from featured' : 'Mark as featured'"
+                >
+                  {{ product.featured ? '★ Featured' : '☆ Add' }}
+                </button>
+              </td>
+
+              <td>
+                <button
+                  class="status-badge"
+                  [class.status-badge--active]="product.status === 'Active'"
+                  [class.status-badge--inactive]="product.status === 'Inactive'"
+                  (click)="toggleStatus(product)"
+                  title="Click to change status"
+                >
+                  <span></span>
+                  {{ product.status }}
+                </button>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+                  <button
+                    class="action-button edit-button"
+                    title="Edit product"
+                    (click)="openEditModal(product)"
+                  >
+                    ✎
+                  </button>
+
+                  <button
+                    class="action-button delete-button"
+                    title="Delete product"
+                    (click)="deleteProduct(product)"
+                  >
+                    ×
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span>⌕</span>
+                  <h3>No Products Found</h3>
+                  <p>Try changing your filters or add a new product.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      Showing {{ filteredProducts.length }} of {{ totalProducts }} products
+    </div>
+
+  </section>
+
+  <!-- Add / Edit Modal -->
+  @if (showModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+
+      <div class="product-modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <div>
+            <span class="page-eyebrow">PRODUCT DETAILS</span>
+
+            <h2>
+              {{ isEditing ? 'Edit Product' : 'Add New Product' }}
+            </h2>
+
+            <p>
+              {{
+                isEditing
+                  ? 'Update the information of this product.'
+                  : 'Enter the details to add a new product to your menu.'
+              }}
+            </p>
+          </div>
+
+          <button
+            class="modal-close"
+            type="button"
+            (click)="closeModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <form #productForm="ngForm" (ngSubmit)="saveProduct()">
+
+          <div class="form-group">
+            <label for="productName">Product Name</label>
+            <input
+              id="productName"
+              type="text"
+              name="name"
+              [(ngModel)]="formData.name"
+              placeholder="e.g. Classic Beef Burger"
+              required
+              minlength="2"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="productDescription">Description</label>
+            <textarea
+              id="productDescription"
+              name="description"
+              [(ngModel)]="formData.description"
+              placeholder="Write a product description..."
+              rows="3"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+              <label for="productCategory">Category</label>
+              <select
+                id="productCategory"
+                name="category"
+                [(ngModel)]="formData.category"
+                required
+              >
+                @for (category of categories; track category) {
+                  <option [value]="category">{{ category }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="productPrice">Price ($)</label>
+              <input
+                id="productPrice"
+                type="number"
+                name="price"
+                [(ngModel)]="formData.price"
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
+
+          </div>
+
+          <div class="form-group">
+            <label for="productImage">Image URL</label>
+            <input
+              id="productImage"
+              type="url"
+              name="image"
+              [(ngModel)]="formData.image"
+              placeholder="https://example.com/product.jpg"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+              <label for="productStatus">Status</label>
+              <select
+                id="productStatus"
+                name="status"
+                [(ngModel)]="formData.status"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-group featured-field">
+              <label>Featured Product</label>
+
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="featured"
+                  [(ngModel)]="formData.featured"
+                />
+                <span>Show as featured</span>
+              </label>
+            </div>
+
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="cancel-button"
+              (click)="closeModal()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="save-button"
+              [disabled]="!productForm.valid"
+            >
+              {{ isEditing ? 'Save Changes' : 'Create Product' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+</div>

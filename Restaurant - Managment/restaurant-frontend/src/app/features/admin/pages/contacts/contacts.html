@@ -1,0 +1,309 @@
+
+<section class="contacts-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">CUSTOMER SUPPORT</span>
+      <h1>Contact Messages</h1>
+      <p>Manage customer inquiries, feedback and support requests.</p>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--primary">
+        <span>M</span>
+      </div>
+      <div>
+        <p>Total Messages</p>
+        <h2>{{ totalMessages }}</h2>
+        <span>All received messages</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--warning">
+        <span>!</span>
+      </div>
+      <div>
+        <p>Unread</p>
+        <h2>{{ unreadMessages }}</h2>
+        <span>Waiting for review</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--info">
+        <span>R</span>
+      </div>
+      <div>
+        <p>Read</p>
+        <h2>{{ readMessages }}</h2>
+        <span>Reviewed messages</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--success">
+        <span>✓</span>
+      </div>
+      <div>
+        <p>Replied</p>
+        <h2>{{ repliedMessages }}</h2>
+        <span>Resolved inquiries</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Messages Section -->
+  <div class="messages-card">
+
+    <div class="messages-header">
+      <div>
+        <h2>All Messages</h2>
+        <p>Review and manage incoming customer messages.</p>
+      </div>
+
+      <span class="messages-count">
+        {{ filteredMessages.length }} Messages
+      </span>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          placeholder="Search by name, email or subject..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <select [(ngModel)]="selectedStatus">
+        <option value="All">All Messages</option>
+        <option value="Unread">Unread</option>
+        <option value="Read">Read</option>
+        <option value="Replied">Replied</option>
+      </select>
+
+    </div>
+
+    <!-- Messages Table -->
+    <div class="table-wrapper">
+
+      <table>
+        <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Subject</th>
+          <th>Message</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+          @for (message of filteredMessages; track message.id) {
+            <tr [class.unread-row]="message.status === 'Unread'">
+
+              <td>
+                <div class="customer-info">
+                  <div class="customer-avatar">
+                    {{ message.name.charAt(0).toUpperCase() }}
+                  </div>
+
+                  <div>
+                    <strong>{{ message.name }}</strong>
+                    <span>{{ message.email }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <strong class="subject-text">
+                  {{ message.subject }}
+                </strong>
+              </td>
+
+              <td>
+                <p class="message-preview">
+                  {{ message.message }}
+                </p>
+              </td>
+
+              <td>
+                <span class="date-text">
+                  {{ message.date | date:'MMM d, y' }}
+                </span>
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [class.unread]="message.status === 'Unread'"
+                  [class.read]="message.status === 'Read'"
+                  [class.replied]="message.status === 'Replied'"
+                >
+                  {{ message.status }}
+                </span>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+
+                  <button
+                    class="view-button"
+                    title="View Message"
+                    (click)="openMessage(message)"
+                  >
+                    View
+                  </button>
+
+                  <button
+                    class="delete-button"
+                    title="Delete Message"
+                    (click)="deleteMessage(message)"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-icon">M</div>
+                  <h3>No Messages Found</h3>
+                  <p>Try changing your search or filter criteria.</p>
+                </div>
+              </td>
+            </tr>
+          }
+
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+
+  <!-- Message Details Modal -->
+  @if (showDetailsModal && selectedMessage; as message) {
+    <div class="modal-overlay" (click)="closeModal()">
+
+      <div class="message-modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <div>
+            <span class="modal-eyebrow">CUSTOMER MESSAGE</span>
+            <h2>Message Details</h2>
+          </div>
+
+          <button
+            class="modal-close"
+            (click)="closeModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <!-- Customer Details -->
+        <div class="customer-details">
+
+          <div class="customer-avatar customer-avatar--large">
+            {{ message.name.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="customer-details__info">
+            <h3>{{ message.name }}</h3>
+            <p>{{ message.email }}</p>
+            <p>{{ message.phone }}</p>
+          </div>
+
+        </div>
+
+        <!-- Message Information -->
+        <div class="message-information">
+
+          <div class="information-item">
+            <span>Subject</span>
+            <strong>{{ message.subject }}</strong>
+          </div>
+
+          <div class="information-item">
+            <span>Received Date</span>
+            <strong>{{ message.date | date:'medium' }}</strong>
+          </div>
+
+          <div class="information-item">
+            <span>Status</span>
+
+            <span
+              class="status-badge"
+              [class.unread]="message.status === 'Unread'"
+              [class.read]="message.status === 'Read'"
+              [class.replied]="message.status === 'Replied'"
+            >
+              {{ message.status }}
+            </span>
+          </div>
+
+        </div>
+
+        <!-- Message Content -->
+        <div class="message-content">
+          <h3>Message Content</h3>
+          <p>{{ message.message }}</p>
+        </div>
+
+        <!-- Status Actions -->
+        <div class="status-actions">
+          <span>Update Message Status</span>
+
+          <div>
+            <button
+              [class.selected]="message.status === 'Unread'"
+              (click)="updateStatus(message, 'Unread')"
+            >
+              Unread
+            </button>
+
+            <button
+              [class.selected]="message.status === 'Read'"
+              (click)="updateStatus(message, 'Read')"
+            >
+              Read
+            </button>
+
+            <button
+              [class.selected]="message.status === 'Replied'"
+              (click)="updateStatus(message, 'Replied')"
+            >
+              Replied
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="close-btn" (click)="closeModal()">
+            Close
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  }
+
+</section>

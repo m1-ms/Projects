@@ -1,0 +1,239 @@
+
+<section class="register-page">
+
+  <div class="register-decoration register-decoration--one"></div>
+  <div class="register-decoration register-decoration--two"></div>
+
+  <div class="register-container">
+
+    <!-- Left Visual Section -->
+    <div class="register-visual">
+
+      <a routerLink="/" class="register-logo">
+        <span class="register-logo__icon">S</span>
+        <span>Storm<span>.</span></span>
+      </a>
+
+      <div class="register-visual__content">
+
+        <span class="register-visual__eyebrow">
+          JOIN THE STORM FAMILY
+        </span>
+
+        <h1>
+          Discover
+          <span>Something Delicious.</span>
+        </h1>
+
+        <p>
+          Create your account and enjoy a personalized
+          restaurant experience with your favorite meals.
+        </p>
+
+        <div class="register-visual__image">
+          <img
+            src="https://images.unsplash.com/photo-1547592180-85f173990554?w=1000&auto=format&fit=crop&q=85"
+            alt="Fresh delicious food"
+          />
+
+          <div class="register-floating-card">
+            <span class="register-floating-card__icon">♥</span>
+            <div>
+              <strong>Your Food Journey</strong>
+              <small>Starts right here</small>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="register-visual__footer">
+        © 2026 Storm Restaurant. All rights reserved.
+      </div>
+
+    </div>
+
+    <!-- Right Form Section -->
+    <div class="register-form-section">
+
+      <div class="register-form-wrapper">
+
+        <div class="register-mobile-logo">
+          <a routerLink="/" class="register-logo">
+            <span class="register-logo__icon">S</span>
+            <span>Storm<span>.</span></span>
+          </a>
+        </div>
+
+        <div class="register-heading">
+          <span class="section-label">CREATE YOUR ACCOUNT</span>
+          <h2>Join <span>Storm!</span></h2>
+          <p>Enter your information to get started.</p>
+        </div>
+
+        <form #registerForm="ngForm" (ngSubmit)="onSubmit()">
+
+          <!-- Username -->
+          <div class="register-field">
+            <label for="username">Username</label>
+
+            <input
+              id="username"
+              type="text"
+              name="username"
+              [(ngModel)]="username"
+              placeholder="Choose a username"
+              minlength="7"
+              required
+              autocomplete="username"
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="register-field">
+            <label for="email">Email Address</label>
+
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="Enter your email address"
+              required
+              email
+              autocomplete="email"
+            />
+          </div>
+
+          <!-- Age -->
+          <div class="register-field">
+            <label for="age">Age</label>
+
+            <input
+              id="age"
+              type="number"
+              name="age"
+              [(ngModel)]="age"
+              placeholder="Enter your age"
+              min="16"
+              max="80"
+              required
+            />
+          </div>
+
+          <!-- Password -->
+          <div class="register-field">
+            <label for="password">Password</label>
+
+            <div class="register-password-wrapper">
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                name="password"
+                [(ngModel)]="password"
+                placeholder="Create a strong password"
+                minlength="7"
+                required
+                autocomplete="new-password"
+              />
+
+              <button
+                type="button"
+                class="register-password-toggle"
+                (click)="togglePassword()"
+              >
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+
+            <small class="register-hint">
+              7+ characters, uppercase, lowercase, number and special character.
+            </small>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="register-field">
+            <label for="confirmPassword">Confirm Password</label>
+
+            <div class="register-password-wrapper">
+              <input
+                id="confirmPassword"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                name="confirmPassword"
+                [(ngModel)]="confirmPassword"
+                placeholder="Confirm your password"
+                required
+                autocomplete="new-password"
+              />
+
+              <button
+                type="button"
+                class="register-password-toggle"
+                (click)="toggleConfirmPassword()"
+              >
+                {{ showConfirmPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Terms -->
+          <label class="register-terms">
+            <input
+              type="checkbox"
+              name="agreeToTerms"
+              [(ngModel)]="agreeToTerms"
+            />
+
+            <span>
+              I agree to the
+              <a href="#terms">Terms & Conditions</a>
+              and
+              <a href="#privacy">Privacy Policy</a>.
+            </span>
+          </label>
+
+          <!-- Messages -->
+          @if (errorMessage) {
+            <div class="register-message register-message--error">
+              {{ errorMessage }}
+            </div>
+          }
+
+          @if (successMessage) {
+            <div class="register-message register-message--success">
+              {{ successMessage }}
+            </div>
+          }
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="register-submit"
+            [disabled]="!registerForm.valid"
+          >
+            Create Account
+            <span>→</span>
+          </button>
+
+        </form>
+
+        <div class="register-divider">
+          <span>OR</span>
+        </div>
+
+        <p class="login-prompt">
+          Already have an account?
+          <a routerLink="/login">Sign In</a>
+        </p>
+
+        <a routerLink="/" class="register-back-home">
+          ← Back to Home
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

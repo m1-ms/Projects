@@ -1,0 +1,154 @@
+<section class="favorites-page">
+  <div class="container">
+
+    <div class="favorites-header">
+      <div>
+        <span class="section-eyebrow">YOUR COLLECTION</span>
+        <h1>My <span>Favorites</span></h1>
+        <p>Your favorite dishes, all in one place.</p>
+      </div>
+
+      @if (favorites().length > 0) {
+        <button
+          class="clear-btn"
+          type="button"
+          (click)="clearFavorites()"
+        >
+          Clear All
+        </button>
+      }
+    </div>
+
+    @if (favorites().length > 0) {
+
+      <div class="favorites-count">
+        {{ favorites().length }} favorite dishes
+      </div>
+
+      <div class="favorites-grid">
+
+        @for (product of favorites(); track product.id) {
+
+          <article class="favorite-card">
+
+            <div class="favorite-card__image">
+
+              <a [routerLink]="['/product-details', product.id]">
+                <img [src]="product.image" [alt]="product.name" />
+              </a>
+
+              <button
+                class="remove-btn"
+                type="button"
+                aria-label="Remove from favorites"
+                (click)="removeFavorite(product.id)"
+              >
+                ♥
+              </button>
+
+              @if (product.badge) {
+                <span class="favorite-badge">
+                  {{ product.badge }}
+                </span>
+              }
+
+            </div>
+
+            <div class="favorite-card__content">
+
+              <div class="favorite-card__meta">
+                <span class="favorite-category">
+                  {{ product.category }}
+                </span>
+
+                <span class="favorite-rating">
+                  ★ {{ product.rating }}
+                </span>
+              </div>
+
+              <h3>
+                <a [routerLink]="['/product-details', product.id]">
+                  {{ product.name }}
+                </a>
+              </h3>
+
+              <p>{{ product.description }}</p>
+
+              <div class="favorite-card__footer">
+
+                <span class="favorite-price">
+                  ${{ product.price.toFixed(2) }}
+                </span>
+
+                @if (getProductQuantity(product.id) > 0) {
+
+                  <div class="favorite-quantity-control">
+
+                    <button
+                      type="button"
+                      (click)="decreaseQuantity(product.id)"
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+
+                    <span>
+                      {{ getProductQuantity(product.id) }}
+                    </span>
+
+                    <button
+                      type="button"
+                      (click)="increaseQuantity(product.id)"
+                      [disabled]="getProductQuantity(product.id) >= 20"
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+
+                  </div>
+
+                } @else {
+
+                  <button
+                    class="add-cart-btn"
+                    type="button"
+                    (click)="addToCart(product)"
+                  >
+                    + Add to Cart
+                  </button>
+
+                }
+
+              </div>
+
+            </div>
+
+          </article>
+
+        }
+
+      </div>
+
+    } @else {
+
+      <div class="empty-favorites">
+
+        <div class="empty-favorites__icon">♡</div>
+
+        <h2>No Favorites Yet</h2>
+
+        <p>
+          You haven't added any dishes to your favorites.
+          Explore our menu and save the dishes you love.
+        </p>
+
+        <a routerLink="/menu" class="explore-btn">
+          Explore Menu
+        </a>
+
+      </div>
+
+    }
+
+  </div>
+</section>

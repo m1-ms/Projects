@@ -1,0 +1,113 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  // Brand Colors
+  --color-primary: #E3242B;
+  --color-primary-dark: #B31B21;
+
+  // Background Colors
+  --color-background: #FBF5EE;
+  --color-surface: #FFFFFF;
+
+  // Text Colors
+  --color-ink: #191919;
+  --color-muted: #7A746C;
+  --color-border: #EAE2D9;
+
+  // Typography
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Poppins', sans-serif;
+
+  // Layout
+  --container-width: 1280px;
+  --navbar-height: 80px;
+
+  // Effects
+  --shadow-soft: 0 8px 30px rgba(25, 25, 25, 0.06);
+  --shadow-card: 0 12px 40px rgba(25, 25, 25, 0.08);
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  // Transitions
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-ink);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 10px;
+}
+
+.container {
+  width: min(100% - 48px, var(--container-width));
+  margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: min(100% - 32px, var(--container-width));
+  }
+}

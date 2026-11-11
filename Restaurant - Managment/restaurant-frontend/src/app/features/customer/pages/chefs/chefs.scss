@@ -1,0 +1,631 @@
+
+:host {
+  display: block;
+}
+
+.chefs-page {
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+// Hero Section
+
+.chefs-hero {
+  position: relative;
+  padding: 85px 0 105px;
+  background: #fff;
+}
+
+.chefs-hero__container {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr;
+  align-items: center;
+  gap: 75px;
+}
+
+.chefs-hero__content {
+  position: relative;
+  z-index: 2;
+}
+
+.chefs-hero__eyebrow,
+.section-eyebrow {
+  display: inline-block;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+}
+
+.chefs-hero__content h1 {
+  max-width: 550px;
+  margin: 22px 0;
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-size: clamp(42px, 5vw, 68px);
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.chefs-hero__content h1 span,
+.chefs-section__heading h2 span,
+.chefs-philosophy__content h2 span,
+.chefs-cta h2 span {
+  color: var(--color-primary);
+}
+
+.chefs-hero__content > p {
+  max-width: 470px;
+  margin-bottom: 30px;
+  color: var(--color-muted);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.chefs-hero__button,
+.chefs-cta__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 15px 25px;
+  border-radius: 50px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.chefs-hero__button:hover,
+.chefs-cta__button:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-primary);
+}
+
+.chefs-hero__button span,
+.chefs-cta__button span {
+  font-size: 19px;
+}
+
+.chefs-hero__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px;
+  margin-top: 50px;
+}
+
+.chefs-hero__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chefs-hero__stats strong {
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-size: 27px;
+}
+
+.chefs-hero__stats span {
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+// Hero Visual
+
+.chefs-hero__visual {
+  position: relative;
+  min-width: 0;
+  padding: 15px 15px 30px 25px;
+}
+
+.chefs-hero__image-frame {
+  position: relative;
+  z-index: 1;
+  height: 490px;
+  overflow: hidden;
+  border-radius: 48% 48% 25px 25px;
+  background: #eee;
+  box-shadow: 0 25px 65px rgba(25, 25, 25, 0.13);
+}
+
+.chefs-hero__image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.chefs-hero__image-frame:hover img {
+  transform: scale(1.05);
+}
+
+.chefs-hero__floating-card {
+  position: absolute;
+  z-index: 3;
+  right: -25px;
+  bottom: 65px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 17px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+}
+
+.chefs-hero__floating-icon {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff0ed;
+  color: var(--color-primary);
+  font-size: 23px;
+}
+
+.chefs-hero__floating-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chefs-hero__floating-card strong {
+  color: var(--color-ink);
+  font-size: 13px;
+}
+
+.chefs-hero__floating-card small {
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.chefs-hero__decoration {
+  position: absolute;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  opacity: 0.25;
+}
+
+.chefs-hero__decoration--one {
+  top: 0;
+  right: -15px;
+  width: 95px;
+  height: 95px;
+}
+
+.chefs-hero__decoration--two {
+  bottom: 5px;
+  left: 0;
+  width: 55px;
+  height: 55px;
+}
+
+// Chefs Section
+
+.chefs-section {
+  padding: 105px 0;
+}
+
+.chefs-section__heading {
+  max-width: 650px;
+  margin: 0 auto 55px;
+  text-align: center;
+}
+
+.chefs-section__heading h2,
+.chefs-philosophy__content h2 {
+  margin: 17px 0;
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.25;
+}
+
+.chefs-section__heading p {
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.chefs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.chef-card {
+  overflow: hidden;
+  border: 1px solid rgba(25, 25, 25, 0.06);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(25, 25, 25, 0.04);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.chef-card:hover {
+  transform: translateY(-9px);
+  box-shadow: 0 20px 45px rgba(25, 25, 25, 0.11);
+}
+
+.chef-card__image-wrapper {
+  position: relative;
+  height: 265px;
+  overflow: hidden;
+  background: #eee;
+}
+
+.chef-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.chef-card:hover .chef-card__image {
+  transform: scale(1.07);
+}
+
+.chef-card__experience {
+  position: absolute;
+  top: 15px;
+  left: 14px;
+  padding: 8px 11px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--color-ink);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.chef-card__rating {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 30px;
+  background: #fff;
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chef-card__rating span {
+  color: #f5a623;
+  font-size: 15px;
+}
+
+.chef-card__content {
+  padding: 23px 19px 18px;
+}
+
+.chef-card__role {
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.chef-card__content h3 {
+  margin: 9px 0 5px;
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-size: 21px;
+}
+
+.chef-card__specialty {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chef-card__content > p {
+  min-height: 85px;
+  margin: 15px 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.chef-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 15px;
+  border-top: 1px solid #f0eeeb;
+}
+
+.chef-card__passion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-ink);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.chef-card__passion span {
+  color: var(--color-primary);
+}
+
+.chef-card__number {
+  color: #d5d0c9;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+// Philosophy Section
+
+.chefs-philosophy {
+  padding: 100px 0;
+  background: #fff;
+}
+
+.chefs-philosophy__container {
+  display: grid;
+  grid-template-columns: 0.95fr 1fr;
+  align-items: center;
+  gap: 85px;
+}
+
+.chefs-philosophy__image {
+  position: relative;
+  height: 460px;
+}
+
+.chefs-philosophy__image > img {
+  width: 100%;
+  height: 100%;
+  border-radius: 25px;
+  object-fit: cover;
+}
+
+.chefs-philosophy__image-label {
+  position: absolute;
+  right: -25px;
+  bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 17px 22px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.1);
+}
+
+.chefs-philosophy__image-label span {
+  color: var(--color-primary);
+  font-size: 23px;
+}
+
+.chefs-philosophy__image-label strong {
+  color: var(--color-ink);
+  font-size: 12px;
+}
+
+.chefs-philosophy__content h2 {
+  max-width: 500px;
+}
+
+.chefs-philosophy__content > p {
+  margin: 20px 0 30px;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.chefs-philosophy__features {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.chefs-philosophy__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.chefs-philosophy__icon {
+  display: grid;
+  flex-shrink: 0;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  border-radius: 12px;
+  background: #fff0ed;
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
+.chefs-philosophy__feature h3 {
+  margin-bottom: 5px;
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.chefs-philosophy__feature p {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+// Call To Action
+
+.chefs-cta {
+  position: relative;
+  padding: 90px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.08) 0 2px, transparent 3px),
+    linear-gradient(120deg, #191919, #302321);
+  background-size: 35px 35px, auto;
+  text-align: center;
+}
+
+.chefs-cta__container {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+}
+
+.chefs-cta__eyebrow {
+  color: #ffaaa6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+}
+
+.chefs-cta h2 {
+  margin: 20px 0;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(34px, 5vw, 50px);
+  line-height: 1.25;
+}
+
+.chefs-cta h2 span {
+  color: #ff7771;
+}
+
+.chefs-cta p {
+  max-width: 520px;
+  margin: 0 auto 28px;
+  color: #c4c0bd;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+// Responsive Design
+
+@media (max-width: 1100px) {
+  .chefs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 750px;
+    margin: 0 auto;
+  }
+
+  .chefs-hero__container {
+    gap: 40px;
+  }
+
+  .chefs-philosophy__container {
+    gap: 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chefs-hero {
+    padding: 60px 0 75px;
+  }
+
+  .chefs-hero__container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .chefs-hero__content {
+    text-align: center;
+  }
+
+  .chefs-hero__content > p {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .chefs-hero__stats {
+    justify-content: center;
+    gap: 25px;
+  }
+
+  .chefs-hero__visual {
+    width: min(100%, 480px);
+    margin: 0 auto;
+    padding-right: 15px;
+  }
+
+  .chefs-hero__image-frame {
+    height: 400px;
+  }
+
+  .chefs-hero__floating-card {
+    right: -5px;
+  }
+
+  .chefs-section,
+  .chefs-philosophy {
+    padding: 75px 0;
+  }
+
+  .chefs-philosophy__container {
+    grid-template-columns: 1fr;
+    gap: 45px;
+  }
+
+  .chefs-philosophy__image {
+    height: 380px;
+  }
+
+  .chefs-philosophy__image-label {
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chefs-hero__content h1 {
+    font-size: 42px;
+  }
+
+  .chefs-hero__stats {
+    gap: 18px;
+  }
+
+  .chefs-hero__stats strong {
+    font-size: 23px;
+  }
+
+  .chefs-hero__stats span {
+    font-size: 10px;
+  }
+
+  .chefs-hero__image-frame {
+    height: 330px;
+  }
+
+  .chefs-hero__floating-card {
+    right: -5px;
+    bottom: 45px;
+    padding: 12px 14px;
+  }
+
+  .chefs-grid {
+    grid-template-columns: 1fr;
+    max-width: 360px;
+  }
+
+  .chef-card__image-wrapper {
+    height: 300px;
+  }
+
+  .chef-card__content > p {
+    min-height: auto;
+  }
+
+  .chefs-philosophy__image {
+    height: 300px;
+  }
+
+  .chefs-cta {
+    padding: 70px 15px;
+  }
+}

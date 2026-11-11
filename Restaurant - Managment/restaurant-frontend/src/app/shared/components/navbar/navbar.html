@@ -1,0 +1,74 @@
+<header class="navbar">
+  <div class="container navbar__container">
+
+    <a routerLink="/" class="navbar__logo">
+      <span class="navbar__logo-icon">S</span>
+      <span>Storm<span class="navbar__logo-dot">.</span></span>
+    </a>
+
+    <nav class="navbar__links">
+
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Home
+      </a>
+
+      <a routerLink="/menu" routerLinkActive="active">
+        Menu
+      </a>
+
+      <a routerLink="/chefs" routerLinkActive="active">
+        Our Chefs
+      </a>
+
+      <a routerLink="/contact" routerLinkActive="active">
+        Contact
+      </a>
+
+      <a routerLink="/orders" routerLinkActive="active">
+        My Orders
+      </a>
+
+      <a routerLink="/favorites" routerLinkActive="active">
+        My Favorites
+
+        <span class="navbar__favorite-count">
+          {{ favoritesCount() }}
+        </span>
+      </a>
+
+      <a routerLink="/profile" routerLinkActive="active">
+        My Profile
+      </a>
+
+    </nav>
+
+    <div class="navbar__actions">
+
+      <a
+        routerLink="/cart"
+        class="navbar__cart"
+        routerLinkActive="active"
+        aria-label="Shopping cart"
+      >
+        <span class="navbar__cart-icon">🛍</span>
+        <span>Cart</span>
+
+        @if (cartItemsCount() > 0) {
+          <span class="navbar__cart-count">
+            {{ cartItemsCount() }}
+          </span>
+        }
+      </a>
+
+      <a routerLink="/login" class="navbar__login">
+        Login
+      </a>
+
+    </div>
+
+  </div>
+</header>

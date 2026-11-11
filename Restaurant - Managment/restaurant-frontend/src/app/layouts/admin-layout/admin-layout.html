@@ -1,0 +1,152 @@
+
+<div class="admin-layout">
+
+  @if (sidebarOpen) {
+    <div class="sidebar-overlay" (click)="closeSidebar()"></div>
+  }
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" [class.admin-sidebar--open]="sidebarOpen">
+
+    <a routerLink="/admin/dashboard" class="admin-logo" (click)="closeSidebar()">
+      <span class="admin-logo__icon">S</span>
+
+      <span class="admin-logo__text">
+        <strong>STORM</strong>
+        <small>ADMIN PANEL</small>
+      </span>
+    </a>
+
+    <div class="sidebar-section">
+      <span class="sidebar-section__title">MAIN MENU</span>
+
+      <nav class="sidebar-nav">
+
+        <a routerLink="/admin/dashboard"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">▦</span>
+          <span>Dashboard</span>
+        </a>
+
+        <a routerLink="/admin/categories"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">▤</span>
+          <span>Categories</span>
+        </a>
+
+        <a routerLink="/admin/products"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">♧</span>
+          <span>Products</span>
+        </a>
+
+        <a routerLink="/admin/chefs"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">♨</span>
+          <span>Chefs</span>
+        </a>
+
+      </nav>
+    </div>
+
+    <div class="sidebar-section">
+      <span class="sidebar-section__title">MANAGEMENT</span>
+
+      <nav class="sidebar-nav">
+
+        <a routerLink="/admin/orders"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">▣</span>
+          <span>Orders</span>
+        </a>
+
+        <a routerLink="/admin/users"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">♙</span>
+          <span>Users</span>
+        </a>
+
+        <a routerLink="/admin/contacts"
+           routerLinkActive="active"
+           class="sidebar-link"
+           (click)="closeSidebar()">
+          <span class="sidebar-link__icon">✉</span>
+          <span>Messages</span>
+        </a>
+
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="admin-user">
+        <div class="admin-user__avatar">A</div>
+
+        <div class="admin-user__info">
+          <strong>Administrator</strong>
+          <small>Super Admin</small>
+        </div>
+      </div>
+
+      <a routerLink="/" class="back-to-site">
+        <span>↗</span>
+        View Website
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- Main Area -->
+  <div class="admin-main">
+
+    <header class="admin-topbar">
+
+      <div class="topbar-left">
+        <button
+          class="menu-toggle"
+          type="button"
+          (click)="toggleSidebar()"
+          aria-label="Toggle sidebar">
+          ☰
+        </button>
+
+        <div class="topbar-heading">
+          <span>STORM RESTAURANT</span>
+          <h2>Administration</h2>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="admin-status">
+          <span class="status-dot"></span>
+          Admin Panel
+        </div>
+
+        <div class="topbar-avatar">A</div>
+      </div>
+
+    </header>
+
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+
+    <footer class="admin-footer">
+      <span>© 2026 Storm Restaurant.</span>
+      <span>Admin Dashboard</span>
+    </footer>
+
+  </div>
+
+</div>

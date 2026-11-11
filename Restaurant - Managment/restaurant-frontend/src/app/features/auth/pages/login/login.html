@@ -1,0 +1,189 @@
+
+<section class="login-page">
+
+  <div class="login-decoration login-decoration--one"></div>
+  <div class="login-decoration login-decoration--two"></div>
+
+  <div class="login-container">
+
+    <!-- Left Visual Section -->
+    <div class="login-visual">
+
+      <a routerLink="/" class="login-logo">
+        <span class="login-logo__icon">S</span>
+        <span>Storm<span>.</span></span>
+      </a>
+
+      <div class="login-visual__content">
+        <span class="login-visual__eyebrow">WELCOME BACK</span>
+
+        <h1>
+          Great Food.
+          <span>Great Moments.</span>
+        </h1>
+
+        <p>
+          Your favorite flavors are waiting for you.
+          Sign in and continue your delicious journey with Storm.
+        </p>
+
+        <div class="login-visual__image">
+          <img
+            src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1000&auto=format&fit=crop&q=85"
+            alt="Delicious restaurant food"
+          />
+
+          <div class="login-floating-card">
+            <span class="login-floating-card__icon">★</span>
+            <div>
+              <strong>Premium Experience</strong>
+              <small>Made with passion</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-visual__footer">
+        © 2026 Storm Restaurant. All rights reserved.
+      </div>
+
+    </div>
+
+    <!-- Right Form Section -->
+    <div class="login-form-section">
+
+      <div class="login-form-wrapper">
+
+        <div class="login-mobile-logo">
+          <a routerLink="/" class="login-logo">
+            <span class="login-logo__icon">S</span>
+            <span>Storm<span>.</span></span>
+          </a>
+        </div>
+
+        <div class="login-heading">
+          <span class="section-label">YOUR ACCOUNT</span>
+          <h2>Welcome <span>Back!</span></h2>
+          <p>Enter your details to access your account.</p>
+        </div>
+
+        <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
+
+          <!-- Username -->
+          <div class="login-field">
+            <label for="username">Username</label>
+
+            <div class="login-input-wrapper">
+              <span class="login-input-icon">♙</span>
+
+              <input
+                id="username"
+                type="text"
+                name="username"
+                [(ngModel)]="username"
+                placeholder="Enter your username"
+                minlength="7"
+                required
+                autocomplete="username"
+              />
+            </div>
+
+            @if (loginForm.submitted && username.trim().length < 7) {
+              <small class="field-error">
+                Username must contain at least 7 characters.
+              </small>
+            }
+          </div>
+
+          <!-- Password -->
+          <div class="login-field">
+            <label for="password">Password</label>
+
+            <div class="login-input-wrapper">
+              <span class="login-input-icon">♙</span>
+
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                name="password"
+                [(ngModel)]="password"
+                placeholder="Enter your password"
+                minlength="7"
+                required
+                autocomplete="current-password"
+              />
+
+              <button
+                type="button"
+                class="password-toggle"
+                (click)="togglePassword()"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+              >
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember Me -->
+          <div class="login-options">
+
+            <label class="remember-option">
+              <input
+                type="checkbox"
+                name="rememberMe"
+                [(ngModel)]="rememberMe"
+              />
+              <span>Remember me</span>
+            </label>
+
+            <a routerLink="/forgot-password" class="forgot-link">
+              Forgot Password?
+            </a>
+
+          </div>
+
+          <!-- Messages -->
+          @if (errorMessage) {
+            <div class="login-message login-message--error">
+              {{ errorMessage }}
+            </div>
+          }
+
+          @if (successMessage) {
+            <div class="login-message login-message--success">
+              {{ successMessage }}
+            </div>
+          }
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="login-submit"
+            [disabled]="!loginForm.valid"
+          >
+            Sign In
+            <span>→</span>
+          </button>
+
+        </form>
+
+        <div class="login-divider">
+          <span>OR</span>
+        </div>
+
+        <p class="register-prompt">
+          Don't have an account?
+          <a routerLink="/register">Create Account</a>
+        </p>
+
+        <a routerLink="/" class="back-home">
+          ← Back to Home
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

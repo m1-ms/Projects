@@ -1,0 +1,181 @@
+
+<section class="confirmation-page">
+  <div class="container">
+
+    @if (order; as currentOrder) {
+      <div class="confirmation-card">
+
+        <div class="confirmation-success">
+          <div class="success-icon">
+            <span>✓</span>
+          </div>
+
+          <span class="eyebrow">ORDER COMPLETED</span>
+
+          <h1>Thank You for Your Order!</h1>
+
+          <p>
+            Your order has been placed successfully.
+            We're getting everything ready for you.
+          </p>
+        </div>
+
+        <div class="order-number">
+          <span>ORDER NUMBER</span>
+          <strong>{{ currentOrder.id }}</strong>
+        </div>
+
+        <div class="order-status">
+          <div>
+            <span class="status-label">Order Status</span>
+            <strong class="status-badge">
+              {{ currentOrder.status }}
+            </strong>
+          </div>
+
+          <div>
+            <span class="status-label">Order Date</span>
+            <strong>{{ currentOrder.date | date:'medium' }}</strong>
+          </div>
+        </div>
+
+        <div class="confirmation-divider"></div>
+
+        <div class="confirmation-section">
+          <h2>Order Summary</h2>
+
+          <div class="order-items">
+            @for (item of currentOrder.items; track item.id + '-' + (item.selectedSize ?? 'default')) {
+              <div class="order-item">
+
+                <img
+                  [src]="item.image"
+                  [alt]="item.name"
+                  class="order-item__image"
+                />
+
+                <div class="order-item__details">
+                  <h3>{{ item.name }}</h3>
+
+                  @if (item.selectedSize) {
+                    <span class="item-size">
+                      Size: {{ item.selectedSize }}
+                    </span>
+                  }
+
+                  <span class="item-quantity">
+                    Quantity: {{ item.quantity }}
+                  </span>
+                </div>
+
+                <strong class="order-item__price">
+                  ${{ (item.price * item.quantity).toFixed(2) }}
+                </strong>
+
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="confirmation-divider"></div>
+
+        <div class="confirmation-section">
+          <h2>Delivery Information</h2>
+
+          <div class="delivery-info">
+            <div>
+              <span>Full Name</span>
+              <strong>{{ currentOrder.customer.fullName }}</strong>
+            </div>
+
+            <div>
+              <span>Email Address</span>
+              <strong>{{ currentOrder.customer.email }}</strong>
+            </div>
+
+            <div>
+              <span>Phone Number</span>
+              <strong>{{ currentOrder.customer.phone }}</strong>
+            </div>
+
+            <div>
+              <span>City</span>
+              <strong>{{ currentOrder.customer.city }}</strong>
+            </div>
+
+            <div class="delivery-address">
+              <span>Delivery Address</span>
+              <strong>{{ currentOrder.customer.address }}</strong>
+            </div>
+
+            @if (currentOrder.customer.notes) {
+              <div class="delivery-address">
+                <span>Additional Notes</span>
+                <strong>{{ currentOrder.customer.notes }}</strong>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="confirmation-divider"></div>
+
+        <div class="confirmation-section">
+          <h2>Payment Summary</h2>
+
+          <div class="payment-row">
+            <span>Subtotal</span>
+            <strong>${{ currentOrder.subtotal.toFixed(2) }}</strong>
+          </div>
+
+          <div class="payment-row">
+            <span>Delivery Fee</span>
+            <strong>${{ currentOrder.deliveryFee.toFixed(2) }}</strong>
+          </div>
+
+          <div class="payment-row payment-method">
+            <span>Payment Method</span>
+            <strong>{{ currentOrder.paymentMethod }}</strong>
+          </div>
+
+          <div class="payment-total">
+            <span>Total Paid</span>
+            <strong>${{ currentOrder.total.toFixed(2) }}</strong>
+          </div>
+        </div>
+
+        <div class="confirmation-actions">
+          <a routerLink="/menu" class="primary-button">
+            Continue Shopping
+            <span>→</span>
+          </a>
+
+          <a routerLink="/" class="secondary-button">
+            Back to Home
+          </a>
+        </div>
+
+        <p class="confirmation-note">
+          Thank you for choosing Storm Restaurant.
+          We appreciate your trust!
+        </p>
+
+      </div>
+    } @else {
+      <div class="order-not-found">
+        <div class="not-found-icon">!</div>
+
+        <h1>Order Not Found</h1>
+
+        <p>
+          We couldn't find this order. It may not exist or may have been removed.
+        </p>
+
+        <a routerLink="/menu" class="primary-button">
+          Explore Our Menu
+          <span>→</span>
+        </a>
+      </div>
+    }
+
+  </div>
+</section>

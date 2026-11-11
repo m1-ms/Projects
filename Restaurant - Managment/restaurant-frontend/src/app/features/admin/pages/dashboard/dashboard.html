@@ -1,0 +1,247 @@
+
+<div class="dashboard-page">
+
+  <!-- Page Heading -->
+  <section class="dashboard-heading">
+    <div>
+      <span class="page-eyebrow">OVERVIEW</span>
+      <h1>Dashboard</h1>
+      <p>Welcome back! Here's what's happening at your restaurant today.</p>
+    </div>
+
+    <div class="heading-date">
+      <span>▦</span>
+      November 07, 2026
+    </div>
+  </section>
+
+  <!-- Statistics -->
+  <section class="stats-grid">
+
+    @for (stat of stats; track stat.title) {
+      <article class="stat-card">
+        <div class="stat-card__top">
+          <span class="stat-card__title">{{ stat.title }}</span>
+          <span class="stat-card__icon">{{ stat.icon }}</span>
+        </div>
+
+        <h2>{{ stat.value }}</h2>
+
+        <div class="stat-card__bottom">
+          <span class="stat-card__change">{{ stat.change }}</span>
+          <span>{{ stat.description }}</span>
+        </div>
+      </article>
+    }
+
+  </section>
+
+  <!-- Charts -->
+  <section class="dashboard-charts">
+
+    <!-- Weekly Sales -->
+    <article class="dashboard-panel sales-panel">
+      <div class="panel-heading">
+        <div>
+          <h3>Weekly Sales</h3>
+          <p>Your revenue performance this week</p>
+        </div>
+
+        <span class="panel-period">Last 7 Days</span>
+      </div>
+
+      <div class="sales-summary">
+        <strong>$13,480</strong>
+        <span>+12.8% vs last week</span>
+      </div>
+
+      <div class="sales-chart">
+        <div class="chart-y-axis">
+          <span>$3k</span>
+          <span>$2k</span>
+          <span>$1k</span>
+          <span>$0</span>
+        </div>
+
+        <div class="chart-content">
+          <div class="chart-grid">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="chart-bars">
+            @for (sale of weeklySales; track sale.day) {
+              <div class="chart-bar-wrapper">
+                <div class="chart-bar-tooltip">{{ sale.label }}</div>
+
+                <div
+                  class="chart-bar"
+                  [style.height.%]="sale.amount">
+                </div>
+
+                <span class="chart-day">{{ sale.day }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Order Distribution -->
+    <article class="dashboard-panel distribution-panel">
+      <div class="panel-heading">
+        <div>
+          <h3>Order Statistics</h3>
+          <p>Orders by current status</p>
+        </div>
+      </div>
+
+      <div class="distribution-total">
+        <strong>1,284</strong>
+        <span>Total Orders</span>
+      </div>
+
+      <div class="distribution-list">
+        @for (item of orderDistribution; track item.status) {
+          <div class="distribution-item">
+
+            <div class="distribution-item__heading">
+              <span>
+                <i [class]="'distribution-dot ' + item.status.toLowerCase()"></i>
+                {{ item.status }}
+              </span>
+
+              <strong>{{ item.count }}</strong>
+            </div>
+
+            <div class="distribution-track">
+              <div
+                [class]="'distribution-fill ' + item.status.toLowerCase()"
+                [style.width.%]="item.percentage">
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
+    </article>
+
+  </section>
+
+  <!-- Recent Orders -->
+  <section class="dashboard-panel recent-orders-panel">
+
+    <div class="panel-heading">
+      <div>
+        <h3>Recent Orders</h3>
+        <p>Latest customer orders from your restaurant</p>
+      </div>
+
+      <a routerLink="/admin/orders" class="view-all-link">
+        View All <span>→</span>
+      </a>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="orders-table">
+        <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+        </thead>
+
+        <tbody>
+          @for (order of recentOrders; track order.id) {
+            <tr>
+              <td class="order-id">{{ order.id }}</td>
+              <td>{{ order.customer }}</td>
+              <td class="order-date">{{ order.date }}</td>
+              <td class="order-amount">${{ order.amount.toFixed(2) }}</td>
+              <td>
+                <span [class]="'order-status ' + getStatusClass(order.status)">
+                  {{ order.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <!-- Popular Products -->
+  <section class="dashboard-panel popular-products-panel">
+
+    <div class="panel-heading">
+      <div>
+        <h3>Popular Products</h3>
+        <p>Your best-selling menu items</p>
+      </div>
+
+      <a routerLink="/admin/products" class="view-all-link">
+        Manage Products <span>→</span>
+      </a>
+    </div>
+
+    <div class="popular-products-list">
+
+      @for (product of popularProducts; track product.name) {
+        <article class="popular-product">
+
+          <img
+            [src]="product.image"
+            [alt]="product.name"
+            class="popular-product__image">
+
+          <div class="popular-product__info">
+            <strong>{{ product.name }}</strong>
+            <span>{{ product.category }}</span>
+          </div>
+
+          <div class="popular-product__sales">
+            <strong>{{ product.sold }} sold</strong>
+            <span>${{ product.revenue.toFixed(2) }} revenue</span>
+          </div>
+
+        </article>
+      }
+
+    </div>
+
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions">
+    <h3>Quick Actions</h3>
+
+    <div class="quick-actions-grid">
+
+      <a routerLink="/admin/products" class="quick-action">
+        <span>＋</span>
+        <strong>Add Product</strong>
+        <small>Create a new menu item</small>
+      </a>
+
+      <a routerLink="/admin/categories" class="quick-action">
+        <span>▤</span>
+        <strong>Manage Categories</strong>
+        <small>Organize your menu</small>
+      </a>
+
+      <a routerLink="/admin/orders" class="quick-action">
+        <span>▣</span>
+        <strong>View Orders</strong>
+        <small>Track customer orders</small>
+      </a>
+
+    </div>
+  </section>
+
+</div>

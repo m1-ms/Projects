@@ -1,0 +1,272 @@
+<div class="categories-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">CATALOG MANAGEMENT</span>
+      <h1>Categories Management</h1>
+      <p>Organize and manage your restaurant product categories.</p>
+    </div>
+
+    <button class="add-button" (click)="openAddModal()">
+      <span>+</span>
+      Add New Category
+    </button>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--primary">▦</div>
+      <div>
+        <span>Total Categories</span>
+        <h2>{{ categories.length }}</h2>
+        <small>All categories</small>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--success">✓</div>
+      <div>
+        <span>Active Categories</span>
+        <h2>{{ activeCategories }}</h2>
+        <small>Currently available</small>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--warning">◷</div>
+      <div>
+        <span>Inactive Categories</span>
+        <h2>{{ inactiveCategories }}</h2>
+        <small>Currently disabled</small>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--info">♧</div>
+      <div>
+        <span>Total Products</span>
+        <h2>{{ totalProducts }}</h2>
+        <small>Across all categories</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Categories Content -->
+  <section class="categories-content">
+
+    <div class="content-header">
+      <div>
+        <h2>All Categories</h2>
+        <p>Manage your restaurant categories and their availability.</p>
+      </div>
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          placeholder="Search categories..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+        <tr>
+          <th>Category</th>
+          <th>Description</th>
+          <th>Products</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+          @for (category of filteredCategories; track category.id) {
+            <tr>
+              <td>
+                <div class="category-info">
+                  <img
+                    [src]="category.image"
+                    [alt]="category.name"
+                  />
+                  <strong>{{ category.name }}</strong>
+                </div>
+              </td>
+
+              <td>
+                <span class="category-description">
+                  {{ category.description }}
+                </span>
+              </td>
+
+              <td>
+                <span class="products-count">
+                  {{ category.productsCount }} Products
+                </span>
+              </td>
+
+              <td>
+                <button
+                  class="status-badge"
+                  [class.status-badge--active]="category.status === 'Active'"
+                  [class.status-badge--inactive]="category.status === 'Inactive'"
+                  (click)="toggleStatus(category)"
+                  [title]="'Click to change status'"
+                >
+                  <span></span>
+                  {{ category.status }}
+                </button>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+                  <button
+                    class="action-button edit-button"
+                    title="Edit category"
+                    (click)="openEditModal(category)"
+                  >
+                    ✎
+                  </button>
+
+                  <button
+                    class="action-button delete-button"
+                    title="Delete category"
+                    (click)="deleteCategory(category)"
+                  >
+                    ×
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <span>⌕</span>
+                  <h3>No Categories Found</h3>
+                  <p>Try another search term or add a new category.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      Showing {{ filteredCategories.length }} of {{ categories.length }} categories
+    </div>
+
+  </section>
+
+  <!-- Add / Edit Modal -->
+  @if (showModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+
+      <div class="category-modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <div>
+            <span class="page-eyebrow">CATEGORY DETAILS</span>
+            <h2>{{ isEditing ? 'Edit Category' : 'Add New Category' }}</h2>
+            <p>
+              {{
+                isEditing
+                  ? 'Update the information of this category.'
+                  : 'Fill in the details to create a new category.'
+              }}
+            </p>
+          </div>
+
+          <button
+            class="modal-close"
+            type="button"
+            (click)="closeModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <form #categoryForm="ngForm" (ngSubmit)="saveCategory()">
+
+          <div class="form-group">
+            <label for="categoryName">Category Name</label>
+            <input
+              id="categoryName"
+              type="text"
+              name="name"
+              [(ngModel)]="formData.name"
+              placeholder="e.g. Burgers"
+              required
+              minlength="2"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="categoryDescription">Description</label>
+            <textarea
+              id="categoryDescription"
+              name="description"
+              [(ngModel)]="formData.description"
+              placeholder="Write a short category description..."
+              rows="3"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="categoryImage">Image URL</label>
+            <input
+              id="categoryImage"
+              type="url"
+              name="image"
+              [(ngModel)]="formData.image"
+              placeholder="https://example.com/image.jpg"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="categoryStatus">Status</label>
+            <select
+              id="categoryStatus"
+              name="status"
+              [(ngModel)]="formData.status"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="cancel-button"
+              (click)="closeModal()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="save-button"
+              [disabled]="!categoryForm.valid"
+            >
+              {{ isEditing ? 'Save Changes' : 'Create Category' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+</div>

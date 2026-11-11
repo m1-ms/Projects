@@ -1,0 +1,244 @@
+@if (product) {
+  <section class="product-details-page">
+
+    <div class="container">
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a routerLink="/">Home</a>
+        <span>/</span>
+        <a routerLink="/menu">Menu</a>
+        <span>/</span>
+        <span class="current">{{ product.name }}</span>
+      </nav>
+
+      <!-- Product Details -->
+      <div class="product-details-grid">
+
+        <!-- Product Image -->
+        <div class="product-image-wrapper">
+
+          <div class="product-main-image">
+            <img
+              [src]="product.image"
+              [alt]="product.name"
+            />
+
+            @if (product.badge) {
+              <span class="product-badge">
+                {{ product.badge }}
+              </span>
+            }
+
+            <div class="image-decoration"></div>
+          </div>
+
+          <div class="image-caption">
+            <span class="caption-icon">✦</span>
+            <span>Freshly prepared with love</span>
+          </div>
+
+        </div>
+
+        <!-- Product Information -->
+        <div class="product-information">
+
+          <span class="product-category">
+            {{ product.category }}
+          </span>
+
+          <h1>{{ product.name }}</h1>
+
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <strong>{{ product.rating }}</strong>
+            <span class="reviews">
+              ({{ product.reviews }} Reviews)
+            </span>
+          </div>
+
+          <p class="product-description">
+            {{ product.description }}
+          </p>
+
+          <div class="product-price">
+            ${{ product.price.toFixed(2) }}
+          </div>
+
+          <div class="product-divider"></div>
+
+          <!-- Size Selection -->
+          <div class="option-section">
+
+            <h3>Choose Your Size</h3>
+
+            <div class="size-options">
+              @for (size of product.sizes; track size.name) {
+                <button
+                  type="button"
+                  class="size-option"
+                  [class.active]="selectedSize === size.name"
+                  (click)="selectSize(size.name)"
+                >
+                  <span>{{ size.name }}</span>
+
+                  @if (size.extraPrice > 0) {
+                    <small>
+                      +${{ size.extraPrice.toFixed(2) }}
+                    </small>
+                  }
+                </button>
+              }
+            </div>
+
+          </div>
+
+          <!-- Quantity -->
+          <div class="quantity-section">
+
+            <h3>Quantity</h3>
+
+            <div class="quantity-control">
+
+              <button
+                type="button"
+                (click)="decreaseQuantity()"
+                [disabled]="quantity <= 1"
+                aria-label="Decrease quantity"
+              >
+                −
+              </button>
+
+              <span>{{ quantity }}</span>
+
+              <button
+                type="button"
+                (click)="increaseQuantity()"
+                [disabled]="quantity >= 20"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+
+            </div>
+
+          </div>
+
+          <!-- Total -->
+          <div class="total-price">
+            <span>Total Price</span>
+            <strong>${{ totalPrice.toFixed(2) }}</strong>
+          </div>
+
+          <!-- Add To Cart -->
+          <button
+            type="button"
+            class="add-to-cart-btn"
+            (click)="addToCart()"
+          >
+            <span>Add To Cart</span>
+            <span>→</span>
+          </button>
+
+          @if (notification) {
+            <div class="notification">
+              {{ notification }}
+            </div>
+          }
+
+          <div class="product-benefits">
+            <div>
+              <span>✓</span>
+              Fresh Ingredients
+            </div>
+
+            <div>
+              <span>✓</span>
+              Quality Guaranteed
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Ingredients -->
+      <section class="ingredients-section">
+
+        <div class="section-heading">
+          <span>WHAT'S INSIDE</span>
+          <h2>Made With The Best Ingredients</h2>
+          <p>
+            Every ingredient is carefully selected to deliver
+            an exceptional taste experience.
+          </p>
+        </div>
+
+        <div class="ingredients-grid">
+
+          @for (ingredient of product.ingredients; track ingredient) {
+            <div class="ingredient-card">
+              <span class="ingredient-icon">✦</span>
+              <span>{{ ingredient }}</span>
+            </div>
+          }
+
+        </div>
+
+      </section>
+
+      <!-- Related Products -->
+      @if (relatedProducts.length > 0) {
+        <section class="related-products-section">
+
+          <div class="related-heading">
+            <div>
+              <span>YOU MAY ALSO LIKE</span>
+              <h2>Related Products</h2>
+            </div>
+
+            <a routerLink="/menu">
+              View Full Menu →
+            </a>
+          </div>
+
+          <div class="related-products-grid">
+
+            @for (item of relatedProducts; track item.id) {
+              <a
+                class="related-product-card"
+                [routerLink]="['/product-details', item.id]"
+              >
+
+                <div class="related-image">
+                  <img
+                    [src]="item.image"
+                    [alt]="item.name"
+                    loading="lazy"
+                  />
+                </div>
+
+                <div class="related-info">
+                  <h3>{{ item.name }}</h3>
+
+                  <div class="related-bottom">
+                    <strong>
+                      ${{ item.price.toFixed(2) }}
+                    </strong>
+
+                    <span>View Details →</span>
+                  </div>
+                </div>
+
+              </a>
+            }
+
+          </div>
+
+        </section>
+      }
+
+    </div>
+
+  </section>
+}

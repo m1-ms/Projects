@@ -1,0 +1,319 @@
+<section class="users-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <span class="page-header__eyebrow">MANAGEMENT</span>
+      <h1>Users Management</h1>
+      <p>Manage customer accounts and monitor user activity.</p>
+    </div>
+
+    <button class="btn-primary" (click)="openAddModal()">
+      <span>+</span>
+      Add New User
+    </button>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--primary">
+        <span>U</span>
+      </div>
+      <div>
+        <p>Total Users</p>
+        <h2>{{ totalUsers }}</h2>
+        <span>Registered accounts</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--success">
+        <span>✓</span>
+      </div>
+      <div>
+        <p>Active Users</p>
+        <h2>{{ activeUsers }}</h2>
+        <span>Currently active</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--warning">
+        <span>!</span>
+      </div>
+      <div>
+        <p>Inactive Users</p>
+        <h2>{{ inactiveUsers }}</h2>
+        <span>Inactive accounts</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--danger">
+        <span>×</span>
+      </div>
+      <div>
+        <p>Blocked Users</p>
+        <h2>{{ blockedUsers }}</h2>
+        <span>Restricted accounts</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Users Table -->
+  <div class="users-card">
+
+    <div class="users-card__header">
+      <div>
+        <h2>All Users</h2>
+        <p>View and manage registered customers.</p>
+      </div>
+
+      <span class="users-count">
+        {{ filteredUsers.length }} Users
+      </span>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          placeholder="Search by name, email or phone..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <select [(ngModel)]="selectedStatus">
+        <option value="All">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Blocked">Blocked</option>
+      </select>
+
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+
+      <table>
+        <thead>
+        <tr>
+          <th>User</th>
+          <th>Phone</th>
+          <th>Joined Date</th>
+          <th>Orders</th>
+          <th>Total Spent</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+          @for (user of filteredUsers; track user.id) {
+            <tr>
+
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar">
+                    {{ user.username.charAt(0).toUpperCase() }}
+                  </div>
+
+                  <div>
+                    <strong>{{ user.username }}</strong>
+                    <span>{{ user.email }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td>{{ user.phone }}</td>
+
+              <td>{{ user.joinedAt }}</td>
+
+              <td>
+                <span class="orders-count">
+                  {{ user.ordersCount }}
+                </span>
+              </td>
+
+              <td>
+                <strong class="spent-amount">
+                  ${{ user.totalSpent.toFixed(2) }}
+                </strong>
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [class.active]="user.status === 'Active'"
+                  [class.inactive]="user.status === 'Inactive'"
+                  [class.blocked]="user.status === 'Blocked'"
+                >
+                  {{ user.status }}
+                </span>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+
+                  <button
+                    class="action-btn edit-btn"
+                    title="Edit User"
+                    (click)="openEditModal(user)"
+                  >
+                    ✎
+                  </button>
+
+                  <button
+                    class="action-btn status-btn"
+                    title="Toggle Active Status"
+                    (click)="toggleStatus(user)"
+                  >
+                    {{ user.status === 'Active' ? '−' : '+' }}
+                  </button>
+
+                  <button
+                    class="action-btn block-btn"
+                    title="Block / Unblock User"
+                    (click)="blockUser(user)"
+                  >
+                    !
+                  </button>
+
+                  <button
+                    class="action-btn delete-btn"
+                    title="Delete User"
+                    (click)="deleteUser(user)"
+                  >
+                    ×
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <div class="empty-state__icon">U</div>
+                  <h3>No Users Found</h3>
+                  <p>Try changing your search or filter criteria.</p>
+                </div>
+              </td>
+            </tr>
+          }
+
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+
+  <!-- Add / Edit Modal -->
+  @if (showModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+
+      <div class="user-modal" (click)="$event.stopPropagation()">
+
+        <div class="user-modal__header">
+          <div>
+            <span>USER INFORMATION</span>
+            <h2>{{ isEditing ? 'Edit User' : 'Add New User' }}</h2>
+          </div>
+
+          <button class="modal-close" (click)="closeModal()">×</button>
+        </div>
+
+        <form (ngSubmit)="saveUser()" #userForm="ngForm">
+
+          <div class="form-group">
+            <label for="username">Full Name *</label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              [(ngModel)]="formData.username"
+              placeholder="Enter full name"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="formData.email"
+              placeholder="Enter email address"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input
+              id="phone"
+              type="tel"
+              name="phone"
+              [(ngModel)]="formData.phone"
+              placeholder="Enter phone number"
+              required
+            />
+          </div>
+
+          @if (isEditing) {
+            <div class="form-group">
+              <label for="status">Account Status</label>
+              <select
+                id="status"
+                name="status"
+                [(ngModel)]="formData.status"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+          }
+
+          @if (errorMessage) {
+            <div class="form-error">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="closeModal()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="userForm.invalid"
+            >
+              {{ isEditing ? 'Save Changes' : 'Create User' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  }
+
+</section>

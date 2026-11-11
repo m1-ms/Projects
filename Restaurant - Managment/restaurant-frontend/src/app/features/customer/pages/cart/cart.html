@@ -1,0 +1,265 @@
+
+<section class="cart-page">
+
+  <div class="container">
+
+    <!-- Page Header -->
+    <div class="cart-header">
+      <div>
+        <span class="section-label">YOUR ORDER</span>
+        <h1>Shopping Cart</h1>
+        <p>
+          Review your selected dishes before completing your order.
+        </p>
+      </div>
+
+      @if (cartItems.length > 0) {
+        <div class="items-count">
+          {{ totalItems }} Items
+        </div>
+      }
+    </div>
+
+    @if (cartItems.length > 0) {
+
+      <div class="cart-layout">
+
+        <!-- Cart Items -->
+        <div class="cart-items-section">
+
+          <div class="cart-items-header">
+            <h2>Your Items</h2>
+            <span>{{ cartItems.length }} Products</span>
+          </div>
+
+          <div class="cart-items-list">
+
+            @for (item of cartItems; track item.id + '-' + (item.selectedSize ?? 'default')) {
+
+              <article class="cart-item">
+
+                <div class="item-image">
+                  <img
+                    [src]="item.image"
+                    [alt]="item.name"
+                    loading="lazy"
+                  />
+                </div>
+
+                <div class="item-information">
+
+                  @if (item.selectedSize) {
+                    <span class="item-size">
+                      {{ item.selectedSize }}
+                    </span>
+                  }
+
+                  <h3>{{ item.name }}</h3>
+
+                  <p>{{ item.description }}</p>
+
+                  <strong class="item-price">
+                    ${{ item.price.toFixed(2) }}
+                  </strong>
+
+                </div>
+
+                <div class="item-actions">
+
+                  <div class="quantity-control">
+
+                    <button
+                      type="button"
+                      (click)="decreaseQuantity(item)"
+                      [disabled]="item.quantity <= 1"
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+
+                    <span>{{ item.quantity }}</span>
+
+                    <button
+                      type="button"
+                      (click)="increaseQuantity(item)"
+                      [disabled]="item.quantity >= 20"
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+
+                  </div>
+
+                  <strong class="item-total">
+                    ${{ (item.price * item.quantity).toFixed(2) }}
+                  </strong>
+
+                  <button
+                    type="button"
+                    class="remove-btn"
+                    (click)="removeItem(item.id, item.selectedSize)"
+                  >
+                    Remove
+                  </button>
+
+                </div>
+
+              </article>
+
+            }
+
+          </div>
+
+          <a routerLink="/menu" class="continue-shopping">
+            <span>←</span>
+            Continue Shopping
+          </a>
+
+        </div>
+
+        <!-- Order Summary -->
+        <aside class="order-summary">
+
+          <h2>Order Summary</h2>
+
+          <div class="summary-row">
+            <span>Subtotal ({{ totalItems }} items)</span>
+            <strong>${{ subtotal.toFixed(2) }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Delivery Fee</span>
+            <strong>${{ deliveryFee.toFixed(2) }}</strong>
+          </div>
+
+          @if (discountAmount > 0) {
+            <div class="summary-row discount-row">
+              <span>Discount ({{ discountPercentage }}%)</span>
+
+              <strong>
+                -${{ discountAmount.toFixed(2) }}
+              </strong>
+            </div>
+          }
+
+          <div class="summary-divider"></div>
+
+          <!-- Promo Code -->
+          <div class="promo-section">
+
+            <h3>Have a Promo Code?</h3>
+
+            @if (!appliedPromo) {
+
+              <div class="promo-input-group">
+
+                <input
+                  type="text"
+                  placeholder="Enter promo code"
+                  [value]="promoInput"
+                  (input)="onPromoInput($event)"
+                />
+
+                <button
+                  type="button"
+                  (click)="applyPromo()"
+                >
+                  Apply
+                </button>
+
+              </div>
+
+            } @else {
+
+              <div class="applied-promo">
+                <div>
+                  <span>✓</span>
+                  <strong>{{ appliedPromo }}</strong>
+                </div>
+
+                <button
+                  type="button"
+                  (click)="removePromo()"
+                >
+                  Remove
+                </button>
+              </div>
+
+            }
+
+            @if (promoMessage) {
+              <p
+                class="promo-message"
+                [class.success]="promoMessageType === 'success'"
+                [class.error]="promoMessageType === 'error'"
+              >
+                {{ promoMessage }}
+              </p>
+            }
+
+            <p class="promo-hint">
+              Try STORM10 or WELCOME15
+            </p>
+
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <!-- Total -->
+          <div class="summary-total">
+            <span>Total Amount</span>
+            <strong>${{ total.toFixed(2) }}</strong>
+          </div>
+
+          <a routerLink="/checkout" class="checkout-button">
+            Proceed to Checkout
+            <span>→</span>
+          </a>
+
+          <div class="secure-checkout">
+            <span>✓</span>
+            Secure Checkout
+          </div>
+
+          <div class="payment-info">
+            <span>We accept</span>
+
+            <div class="payment-methods">
+              <span>VISA</span>
+              <span>Mastercard</span>
+              <span>Cash</span>
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+
+    } @else {
+
+      <!-- Empty Cart -->
+      <div class="empty-cart">
+
+        <div class="empty-cart-icon">
+          <span>🛒</span>
+        </div>
+
+        <h2>Your Cart Is Empty</h2>
+
+        <p>
+          Looks like you haven't added anything to your cart yet.
+          Explore our menu and discover something delicious.
+        </p>
+
+        <a routerLink="/menu" class="browse-menu-btn">
+          Explore Our Menu
+          <span>→</span>
+        </a>
+
+      </div>
+
+    }
+
+  </div>
+
+</section>

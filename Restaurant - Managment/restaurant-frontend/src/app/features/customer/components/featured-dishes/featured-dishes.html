@@ -1,0 +1,101 @@
+<section class="featured-dishes">
+  <div class="featured-dishes__header">
+    <div class="featured-dishes__heading">
+      <span class="featured-dishes__eyebrow">OUR SPECIAL SELECTION</span>
+      <h2>Featured <span>Dishes</span></h2>
+      <p>
+        Handpicked favorites prepared with passion,
+        fresh ingredients, and unforgettable flavors.
+      </p>
+    </div>
+
+    <a routerLink="/menu" class="featured-dishes__link">
+      Explore Full Menu
+      <span>→</span>
+    </a>
+  </div>
+
+  <div class="featured-dishes__grid">
+    @for (product of products; track product.id) {
+      <article class="dish-card">
+        <div class="dish-card__image">
+          <a [routerLink]="['/product-details', product.id]">
+            <img [src]="product.image" [alt]="product.name" />
+          </a>
+
+          @if (product.badge) {
+            <span class="dish-card__badge">
+              {{ product.badge }}
+            </span>
+          }
+
+          <button
+            type="button"
+            class="dish-card__favorite"
+            [class.active]="isFavorite(product.id)"
+            (click)="toggleFavorite(product)"
+            [attr.aria-label]="isFavorite(product.id) ? 'Remove from favorites' : 'Add to favorites'"
+          >
+            {{ isFavorite(product.id) ? '♥' : '♡' }}
+          </button>
+        </div>
+
+        <div class="dish-card__content">
+          <div class="dish-card__meta">
+            <span>{{ product.category }}</span>
+            <span>★ {{ product.rating }}</span>
+          </div>
+
+          <a
+            class="dish-card__title"
+            [routerLink]="['/product-details', product.id]"
+          >
+            {{ product.name }}
+          </a>
+
+          <p class="dish-card__description">
+            {{ product.description }}
+          </p>
+
+          <div class="dish-card__footer">
+            <strong class="dish-card__price">
+              ${{ product.price.toFixed(2) }}
+            </strong>
+
+            @if (getProductQuantity(product.id) > 0) {
+              <div class="menu-quantity-control">
+                <button
+                  type="button"
+                  (click)="decreaseQuantity(product.id)"
+                  [disabled]="getProductQuantity(product.id) <= 1"
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+
+                <span>{{ getProductQuantity(product.id) }}</span>
+
+                <button
+                  type="button"
+                  (click)="increaseQuantity(product.id)"
+                  [disabled]="getProductQuantity(product.id) >= 20"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+            } @else {
+              <button
+                type="button"
+                class="dish-card__add"
+                (click)="addToCart(product)"
+              >
+                + Add
+              </button>
+            }
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+</section>

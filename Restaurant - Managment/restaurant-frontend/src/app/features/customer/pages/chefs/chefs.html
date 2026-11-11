@@ -1,0 +1,243 @@
+
+<section class="chefs-page">
+
+  <!-- Hero Section -->
+  <section class="chefs-hero">
+    <div class="container chefs-hero__container">
+
+      <div class="chefs-hero__content">
+        <span class="chefs-hero__eyebrow">
+          THE PEOPLE BEHIND THE FLAVOR
+        </span>
+
+        <h1>
+          Meet Our
+          <span>Master Chefs.</span>
+        </h1>
+
+        <p>
+          Great food starts with great people. Meet the talented chefs
+          who bring creativity, passion, and excellence to every dish.
+        </p>
+
+        <a href="#our-chefs" class="chefs-hero__button">
+          Meet The Team
+          <span>→</span>
+        </a>
+
+        <div class="chefs-hero__stats">
+          <div>
+            <strong>{{ totalChefs }}+</strong>
+            <span>Expert Chefs</span>
+          </div>
+
+          <div>
+            <strong>{{ averageExperience }}+</strong>
+            <span>Years Experience</span>
+          </div>
+
+          <div>
+            <strong>4.8</strong>
+            <span>Average Rating</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chefs-hero__visual">
+        <div class="chefs-hero__image-frame">
+          <img
+            src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=1000&auto=format&fit=crop&q=85"
+            alt="Professional restaurant chef"
+          />
+        </div>
+
+        <div class="chefs-hero__floating-card">
+          <span class="chefs-hero__floating-icon">✦</span>
+          <div>
+            <strong>Made With Passion</strong>
+            <small>Every dish tells a story</small>
+          </div>
+        </div>
+
+        <div class="chefs-hero__decoration chefs-hero__decoration--one"></div>
+        <div class="chefs-hero__decoration chefs-hero__decoration--two"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Chefs Section -->
+  <section class="chefs-section" id="our-chefs">
+    <div class="container">
+
+      <div class="chefs-section__heading">
+        <span class="section-eyebrow">
+          OUR PROFESSIONAL TEAM
+        </span>
+
+        <h2>
+          The Artists Behind
+          <span>Our Kitchen.</span>
+        </h2>
+
+        <p>
+          Every member of our culinary team brings unique skills
+          and years of experience to your table.
+        </p>
+      </div>
+
+      <div class="chefs-grid">
+
+        @for (chef of chefs; track chef.id) {
+
+          <article class="chef-card">
+
+            <div class="chef-card__image-wrapper">
+
+              <img
+                [src]="chef.image"
+                [alt]="chef.name"
+                class="chef-card__image"
+                loading="lazy"
+              />
+
+              <span class="chef-card__experience">
+                {{ chef.experience }} Years Experience
+              </span>
+
+              <div class="chef-card__rating">
+                <span>★</span>
+                {{ chef.rating }}
+              </div>
+
+            </div>
+
+            <div class="chef-card__content">
+
+              <span class="chef-card__role">
+                {{ chef.role }}
+              </span>
+
+              <h3>{{ chef.name }}</h3>
+
+              <span class="chef-card__specialty">
+                {{ chef.specialty }}
+              </span>
+
+              <p>{{ chef.description }}</p>
+
+              <div class="chef-card__footer">
+                <span class="chef-card__passion">
+                  <span>✦</span>
+                  Cooking With Passion
+                </span>
+
+                <span class="chef-card__number">
+                  0{{ chef.id }}
+                </span>
+              </div>
+
+            </div>
+
+          </article>
+
+        }
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Philosophy Section -->
+  <section class="chefs-philosophy">
+    <div class="container chefs-philosophy__container">
+
+      <div class="chefs-philosophy__image">
+        <img
+          src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1000&auto=format&fit=crop&q=85"
+          alt="Chef preparing fresh food in the kitchen"
+          loading="lazy"
+        />
+
+        <div class="chefs-philosophy__image-label">
+          <span>✦</span>
+          <strong>Passion in Every Detail</strong>
+        </div>
+      </div>
+
+      <div class="chefs-philosophy__content">
+
+        <span class="section-eyebrow">
+          OUR KITCHEN PHILOSOPHY
+        </span>
+
+        <h2>
+          More Than Cooking,
+          <span>It's An Art.</span>
+        </h2>
+
+        <p>
+          At Storm Restaurant, our chefs believe that exceptional food
+          is created through passion, quality ingredients, and attention
+          to every little detail.
+        </p>
+
+        <div class="chefs-philosophy__features">
+
+          <div class="chefs-philosophy__feature">
+            <span class="chefs-philosophy__icon">✦</span>
+            <div>
+              <h3>Fresh Ingredients</h3>
+              <p>Only carefully selected ingredients make it to your plate.</p>
+            </div>
+          </div>
+
+          <div class="chefs-philosophy__feature">
+            <span class="chefs-philosophy__icon">♨</span>
+            <div>
+              <h3>Expert Preparation</h3>
+              <p>Every recipe is prepared with skill and attention.</p>
+            </div>
+          </div>
+
+          <div class="chefs-philosophy__feature">
+            <span class="chefs-philosophy__icon">♡</span>
+            <div>
+              <h3>Made With Love</h3>
+              <p>We put passion into every meal we serve.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Call To Action -->
+  <section class="chefs-cta">
+    <div class="container chefs-cta__container">
+
+      <span class="chefs-cta__eyebrow">
+        YOUR TABLE IS WAITING
+      </span>
+
+      <h2>
+        Experience The Taste
+        <span>Of Excellence.</span>
+      </h2>
+
+      <p>
+        Let our talented chefs turn your next meal into an unforgettable experience.
+      </p>
+
+      <a routerLink="/menu" class="chefs-cta__button">
+        Explore Our Menu
+        <span>→</span>
+      </a>
+
+    </div>
+  </section>
+
+</section>

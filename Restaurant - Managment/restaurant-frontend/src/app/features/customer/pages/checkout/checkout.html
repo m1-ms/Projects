@@ -1,0 +1,282 @@
+
+<section class="checkout-page">
+
+  <div class="checkout-hero">
+    <div class="container">
+      <span class="checkout-eyebrow">STORM RESTAURANT</span>
+      <h1>Complete Your <span>Order</span></h1>
+      <p>Almost there! Just a few details before your delicious meal arrives.</p>
+    </div>
+  </div>
+
+  <div class="container checkout-container">
+
+    @if (orderPlaced) {
+      <div class="success-card">
+        <div class="success-icon">✓</div>
+        <span class="success-eyebrow">ORDER CONFIRMED</span>
+        <h2>Thank You for Your Order!</h2>
+        <p>Your order has been received successfully. We're getting everything ready for you.</p>
+
+        <div class="order-number">
+          <span>ORDER NUMBER</span>
+          <strong>{{ orderNumber }}</strong>
+        </div>
+
+        <a routerLink="/menu" class="primary-button">Continue Shopping</a>
+      </div>
+    } @else {
+
+      @if (cartItems.length === 0) {
+        <div class="empty-checkout">
+          <div class="empty-icon">🛒</div>
+          <h2>Your Cart Is Empty</h2>
+          <p>Add some delicious food before proceeding to checkout.</p>
+          <a routerLink="/menu" class="primary-button">Explore Menu</a>
+        </div>
+      } @else {
+
+        <div class="checkout-heading">
+          <div>
+            <span class="section-label">SECURE CHECKOUT</span>
+            <h2>Delivery Information</h2>
+            <p>Please provide your details to complete your order.</p>
+          </div>
+
+          <div class="checkout-steps">
+            <span class="step completed">1</span>
+            <span class="step-line"></span>
+            <span class="step active">2</span>
+            <span class="step-line"></span>
+            <span class="step">3</span>
+          </div>
+        </div>
+
+        <div class="checkout-layout">
+
+          <div class="checkout-form">
+
+            <div class="form-section">
+              <div class="form-section-heading">
+                <span class="section-number">01</span>
+                <div>
+                  <h3>Personal Information</h3>
+                  <p>Tell us how we can reach you.</p>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="fullName">Full Name *</label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    name="fullName"
+                    [(ngModel)]="customer.fullName"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email">Email Address *</label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    [(ngModel)]="customer.email"
+                    placeholder="example@email.com"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="phone">Phone Number *</label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    name="phone"
+                    [(ngModel)]="customer.phone"
+                    placeholder="+20 100 000 0000"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-section-heading">
+                <span class="section-number">02</span>
+                <div>
+                  <h3>Delivery Address</h3>
+                  <p>Where should we deliver your order?</p>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="city">City *</label>
+                  <input
+                    id="city"
+                    type="text"
+                    name="city"
+                    [(ngModel)]="customer.city"
+                    placeholder="Enter your city"
+                  />
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="address">Full Address *</label>
+                  <textarea
+                    id="address"
+                    name="address"
+                    [(ngModel)]="customer.address"
+                    placeholder="Street, building number, apartment..."
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="notes">Delivery Notes (Optional)</label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    [(ngModel)]="customer.notes"
+                    placeholder="Any special instructions for delivery?"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-section-heading">
+                <span class="section-number">03</span>
+                <div>
+                  <h3>Payment Method</h3>
+                  <p>Choose how you would like to pay.</p>
+                </div>
+              </div>
+
+              <div class="payment-options">
+
+                <label
+                  class="payment-option"
+                  [class.selected]="paymentMethod === 'Cash on Delivery'"
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="Cash on Delivery"
+                    [(ngModel)]="paymentMethod"
+                  />
+                  <span class="payment-icon">💵</span>
+                  <span class="payment-info">
+                    <strong>Cash on Delivery</strong>
+                    <small>Pay when your order arrives.</small>
+                  </span>
+                  <span class="payment-check">✓</span>
+                </label>
+
+                <label
+                  class="payment-option"
+                  [class.selected]="paymentMethod === 'Card on Delivery'"
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="Card on Delivery"
+                    [(ngModel)]="paymentMethod"
+                  />
+                  <span class="payment-icon">💳</span>
+                  <span class="payment-info">
+                    <strong>Card on Delivery</strong>
+                    <small>Pay by card when your order arrives.</small>
+                  </span>
+                  <span class="payment-check">✓</span>
+                </label>
+
+              </div>
+            </div>
+
+            @if (errorMessage) {
+              <div class="error-message">
+                {{ errorMessage }}
+              </div>
+            }
+
+            <button
+              type="button"
+              class="place-order-button"
+              (click)="placeOrder()"
+            >
+              Place Order
+              <span>→</span>
+            </button>
+
+            <p class="secure-note">
+              Your order information is stored locally for this frontend demo.
+            </p>
+
+          </div>
+
+          <aside class="order-summary">
+
+            <div class="summary-heading">
+              <h3>Order Summary</h3>
+              <span>{{ totalItems }} Items</span>
+            </div>
+
+            <div class="summary-items">
+              @for (item of cartItems; track item.id + '-' + (item.selectedSize ?? 'default')) {
+                <div class="summary-item">
+                  <img [src]="item.image" [alt]="item.name" />
+
+                  <div class="summary-item-info">
+                    <strong>{{ item.name }}</strong>
+
+                    @if (item.selectedSize) {
+                      <span>{{ item.selectedSize }}</span>
+                    }
+
+                    <small>Qty: {{ item.quantity }}</small>
+                  </div>
+
+                  <strong class="item-price">
+                    ${{ (item.price * item.quantity).toFixed(2) }}
+                  </strong>
+                </div>
+              }
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong>${{ subtotal.toFixed(2) }}</strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Delivery Fee</span>
+              <strong>${{ deliveryFee.toFixed(2) }}</strong>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-total">
+              <span>Total</span>
+              <strong>${{ total.toFixed(2) }}</strong>
+            </div>
+
+            <div class="summary-notice">
+              <span>✓</span>
+              <p>Freshly prepared with care, just for you.</p>
+            </div>
+
+            <a routerLink="/cart" class="back-to-cart">← Back to Cart</a>
+
+          </aside>
+
+        </div>
+      }
+    }
+
+  </div>
+</section>

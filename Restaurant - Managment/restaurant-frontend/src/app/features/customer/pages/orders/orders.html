@@ -1,0 +1,222 @@
+
+<section class="orders-page">
+
+  <!-- Page Hero -->
+  <div class="orders-hero">
+    <div class="container">
+
+      <span class="orders-hero__eyebrow">
+        YOUR ACCOUNT
+      </span>
+
+      <h1>
+        My <span>Orders</span>
+      </h1>
+
+      <p>
+        Track your orders and revisit your previous purchases.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container orders-container">
+
+    @if (loading) {
+
+      <div class="orders-message">
+        <div class="loading-spinner"></div>
+        <p>Loading your orders...</p>
+      </div>
+
+    } @else if (errorMessage) {
+
+      <div class="orders-message orders-message--error">
+        <i class="ti ti-alert-circle"></i>
+
+        <p>{{ errorMessage }}</p>
+
+        <button
+          class="retry-button"
+          (click)="loadOrders()"
+        >
+          Try Again
+        </button>
+      </div>
+
+    } @else if (orders.length === 0) {
+
+      <!-- Empty State -->
+      <div class="orders-empty">
+
+        <div class="orders-empty__icon">
+          <i class="ti ti-shopping-bag"></i>
+        </div>
+
+        <h2>No Orders Yet</h2>
+
+        <p>
+          You haven't placed any orders yet.
+          Explore our menu and discover your next favorite meal.
+        </p>
+
+        <a routerLink="/menu" class="orders-empty__button">
+          Explore Our Menu
+          <span>→</span>
+        </a>
+
+      </div>
+
+    } @else {
+
+      <!-- Orders Header -->
+      <div class="orders-header">
+
+        <div>
+          <h2>Order History</h2>
+
+          <p>
+            You have {{ orders.length }}
+            {{ orders.length === 1 ? 'order' : 'orders' }}
+          </p>
+        </div>
+
+        <a routerLink="/menu" class="browse-menu-button">
+          Browse Menu
+          <span>+</span>
+        </a>
+
+      </div>
+
+      <!-- Orders List -->
+      <div class="orders-list">
+
+        @for (order of orders; track order.id) {
+
+          <article class="order-card">
+
+            <!-- Card Header -->
+            <div class="order-card__header">
+
+              <div class="order-card__number">
+
+                <span>ORDER NUMBER</span>
+
+                <h3>{{ order.id }}</h3>
+
+              </div>
+
+              <span
+                [class]="'order-status order-status--' + getStatusClass(order.status)"
+              >
+                {{ order.status }}
+              </span>
+
+            </div>
+
+            <!-- Order Information -->
+            <div class="order-card__info">
+
+              <div class="order-info-item">
+                <span>Order Date</span>
+
+                <strong>
+                  {{ order.date | date:'MMM d, y - h:mm a' }}
+                </strong>
+              </div>
+
+              <div class="order-info-item">
+                <span>Items</span>
+
+                <strong>
+                  {{ getItemsCount(order) }}
+                  {{ getItemsCount(order) === 1 ? 'Item' : 'Items' }}
+                </strong>
+              </div>
+
+              <div class="order-info-item">
+                <span>Payment Method</span>
+
+                <strong>
+                  {{ order.paymentMethod }}
+                </strong>
+              </div>
+
+              <div class="order-info-item">
+                <span>Total Amount</span>
+
+                <strong class="order-total">
+                  {{ order.total | number:'1.2-2' }} EGP
+                </strong>
+              </div>
+
+            </div>
+
+            <!-- Products -->
+            <div class="order-card__products">
+
+              @for (item of order.items; track $index) {
+
+                <div class="order-product">
+
+                  <img
+                    [src]="item.image"
+                    [alt]="item.name"
+                    loading="lazy"
+                  />
+
+                  <div class="order-product__details">
+
+                    <h4>{{ item.name }}</h4>
+
+                    @if (item.selectedSize) {
+                      <span>{{ item.selectedSize }}</span>
+                    }
+
+                    <span>
+                      Quantity: {{ item.quantity }}
+                    </span>
+
+                  </div>
+
+                  <strong class="order-product__price">
+                    {{ (item.price * item.quantity) | number:'1.2-2' }}
+                    EGP
+                  </strong>
+
+                </div>
+
+              }
+
+            </div>
+
+            <!-- Card Footer -->
+            <div class="order-card__footer">
+
+              <span class="order-delivery">
+                <i class="ti ti-map-pin"></i>
+                Delivered to {{ order.customer.city }}
+              </span>
+
+              <a
+                [routerLink]="['/order-confirmation', order.id]"
+                class="order-details-button"
+              >
+                View Details
+                <span>→</span>
+              </a>
+
+            </div>
+
+          </article>
+
+        }
+
+      </div>
+
+    }
+
+  </div>
+
+</section>

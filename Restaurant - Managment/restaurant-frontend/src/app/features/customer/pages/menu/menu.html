@@ -1,0 +1,153 @@
+<section class="menu-page">
+  <div class="menu-hero">
+    <div class="menu-hero__content">
+      <span class="menu-hero__eyebrow">DISCOVER OUR MENU</span>
+      <h1>Explore Our <span>Delicious</span> Menu</h1>
+      <p>
+        Discover a world of flavors, freshly prepared with passion
+        and the finest ingredients.
+      </p>
+    </div>
+  </div>
+
+  <div class="menu-container">
+    <div class="menu-toolbar">
+      <div class="menu-search">
+        <span class="menu-search__icon">⌕</span>
+        <input
+          type="text"
+          placeholder="Search for your favorite dish..."
+          [value]="searchTerm"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
+
+      <a routerLink="/cart" class="menu-cart-link">
+        <span>View Cart</span>
+        <span class="menu-cart-count">{{ cartCount }}</span>
+      </a>
+    </div>
+
+    <div class="menu-categories">
+      @for (category of categories; track category) {
+        <button
+          type="button"
+          class="category-btn"
+          [class.active]="selectedCategory === category"
+          (click)="selectCategory(category)"
+        >
+          {{ category }}
+        </button>
+      }
+    </div>
+
+    <div class="menu-results">
+      <div class="menu-results__heading">
+        <div>
+          <span class="section-eyebrow">OUR SELECTION</span>
+          <h2>{{ selectedCategory === 'All' ? 'All Dishes' : selectedCategory }}</h2>
+        </div>
+
+        <span class="menu-results__count">
+          {{ filteredProducts.length }} dishes
+        </span>
+      </div>
+
+      @if (filteredProducts.length > 0) {
+        <div class="menu-grid">
+          @for (product of filteredProducts; track product.id) {
+            <article class="menu-card">
+              <div class="menu-card__image">
+                <a [routerLink]="['/product-details', product.id]">
+                  <img [src]="product.image" [alt]="product.name" />
+                </a>
+
+                @if (product.badge) {
+                  <span class="menu-card__badge">{{ product.badge }}</span>
+                }
+
+                <button
+                  type="button"
+                  class="menu-card__favorite"
+                  [class.active]="isFavorite(product.id)"
+                  (click)="toggleFavorite(product)"
+                  [attr.aria-label]="isFavorite(product.id) ? 'Remove from favorites' : 'Add to favorites'"
+                >
+                  {{ isFavorite(product.id) ? '♥' : '♡' }}
+                </button>
+              </div>
+
+              <div class="menu-card__content">
+                <div class="menu-card__meta">
+                  <span>{{ product.category }}</span>
+                  <span>★ {{ product.rating }}</span>
+                </div>
+
+                <a
+                  class="menu-card__title"
+                  [routerLink]="['/product-details', product.id]"
+                >
+                  {{ product.name }}
+                </a>
+
+                <p class="menu-card__description">
+                  {{ product.description }}
+                </p>
+
+                <div class="menu-card__footer">
+                  <strong class="menu-card__price">
+                    ${{ product.price.toFixed(2) }}
+                  </strong>
+
+                  @if (getProductQuantity(product.id) > 0) {
+                    <div class="menu-quantity-control">
+                      <button
+                        type="button"
+                        (click)="decreaseQuantity(product.id)"
+                        [disabled]="getProductQuantity(product.id) <= 1"
+                        aria-label="Decrease quantity"
+                      >
+                        −
+                      </button>
+
+                      <span>{{ getProductQuantity(product.id) }}</span>
+
+                      <button
+                        type="button"
+                        (click)="increaseQuantity(product.id)"
+                        [disabled]="getProductQuantity(product.id) >= 20"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="menu-card__add"
+                      (click)="addToCart(product)"
+                    >
+                      + Add
+                    </button>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="menu-empty">
+          <span>⌕</span>
+          <h3>No dishes found</h3>
+          <p>Try another search term or choose a different category.</p>
+          <button
+            type="button"
+            (click)="onSearch(''); selectCategory('All')"
+          >
+            Clear Filters
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</section>
