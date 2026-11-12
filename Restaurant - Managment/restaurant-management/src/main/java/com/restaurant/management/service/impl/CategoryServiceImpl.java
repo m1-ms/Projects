@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.CategoryRequest;
 import com.restaurant.management.dto.request.CategoryUpdateRequest;
@@ -19,6 +20,8 @@ import com.restaurant.management.repository.specification.CategorySpecifications
 import com.restaurant.management.service.CategoryService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,6 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CATEGORIES, key = "'all:' + #page + ':' + #size")
     public PageResponse<CategoryResponse> getAll(int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
         Page<CategoryResponse> result = categoryRepository.findAll(pageable).map(categoryMapper::toResponse);
@@ -51,12 +55,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CATEGORIES, key = "'id:' + #id")
     public CategoryResponse getById(Long id) {
         return categoryMapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CATEGORIES, key = "'search:' + #id + ':' + #key?.trim()?.toLowerCase() + ':' + #page + ':' + #size")
     public PageResponse<CategoryResponse> search(Long id, String key, int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
         String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
@@ -86,6 +92,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CATEGORIES, CacheNames.PRODUCTS, CacheNames.DASHBOARD}, allEntries = true)
     public CategoryResponse save(CategoryRequest request) {
         assertNameAvailable(request.getName());
         Category saved = categoryRepository.save(categoryMapper.toEntity(request));
@@ -94,6 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CATEGORIES, CacheNames.PRODUCTS, CacheNames.DASHBOARD}, allEntries = true)
     public List<CategoryResponse> saveAll(List<CategoryRequest> requests) {
         Set<String> seenNames = new HashSet<>();
         for (CategoryRequest request : requests) {
@@ -108,6 +116,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CATEGORIES, CacheNames.PRODUCTS, CacheNames.DASHBOARD}, allEntries = true)
     public CategoryResponse update(CategoryUpdateRequest request) {
         Category category = findOrThrow(request.getId());
         assertNameAvailableForUpdate(request.getName(), request.getId());
@@ -117,6 +126,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CATEGORIES, CacheNames.PRODUCTS, CacheNames.DASHBOARD}, allEntries = true)
     public List<CategoryResponse> updateAll(List<CategoryUpdateRequest> requests) {
         Set<Long> seenIds = new HashSet<>();
         Set<String> seenNames = new HashSet<>();
@@ -138,6 +148,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CATEGORIES, CacheNames.PRODUCTS, CacheNames.DASHBOARD}, allEntries = true)
     public void delete(Long id) {
         Category category = findOrThrow(id);
         assertNotInUse(category);
@@ -146,6 +157,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CATEGORIES, CacheNames.PRODUCTS, CacheNames.DASHBOARD}, allEntries = true)
     public void deleteAll(List<Long> ids) {
         List<Long> distinctIds = ids.stream().distinct().toList();
         List<Category> found = categoryRepository.findAllById(distinctIds);

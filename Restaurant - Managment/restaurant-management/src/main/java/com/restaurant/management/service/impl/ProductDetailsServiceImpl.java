@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.request.ProductDetailsCreateRequest;
 import com.restaurant.management.dto.request.ProductDetailsUpdateRequest;
 import com.restaurant.management.dto.response.PageResponse;
@@ -14,6 +15,8 @@ import com.restaurant.management.repository.ProductRepository;
 import com.restaurant.management.service.ProductDetailsService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,6 +33,7 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCT_DETAILS, key = "'all:' + #page + ':' + #size")
     public PageResponse<ProductDetailsResponse> getAll(int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
         Page<ProductDetailsResponse> result = detailsRepository.findAll(pageable)
@@ -39,12 +43,14 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCT_DETAILS, key = "'id:' + #id")
     public ProductDetailsResponse getById(Long id) {
         return detailsMapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCT_DETAILS, key = "'product:' + #productId")
     public ProductDetailsResponse getByProductId(Long productId) {
         if (!productRepository.existsById(productId)) {
             throw new ResourceNotFoundException("product.notfound", String.valueOf(productId));
@@ -57,6 +63,7 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.PRODUCT_DETAILS, allEntries = true)
     public ProductDetailsResponse save(ProductDetailsCreateRequest request) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -73,6 +80,7 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.PRODUCT_DETAILS, allEntries = true)
     public ProductDetailsResponse update(ProductDetailsUpdateRequest request) {
         ProductDetails details = findOrThrow(request.getId());
         detailsMapper.updateEntity(details, request);
@@ -81,6 +89,7 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.PRODUCT_DETAILS, allEntries = true)
     public void delete(Long id) {
         ProductDetails details = findOrThrow(id);
         Product product = details.getProduct();

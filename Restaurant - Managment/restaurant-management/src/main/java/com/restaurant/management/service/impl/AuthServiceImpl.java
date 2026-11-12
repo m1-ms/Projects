@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.request.LoginRequest;
 import com.restaurant.management.dto.request.SignUpRequest;
 import com.restaurant.management.dto.response.AuthResponse;
@@ -14,6 +15,7 @@ import com.restaurant.management.repository.RestaurantUserRepository;
 import com.restaurant.management.security.JwtService;
 import com.restaurant.management.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -39,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.DASHBOARD, allEntries = true)
     public UserResponse signUp(SignUpRequest request) {
         String username = request.getUsername().trim();
         if (userRepository.existsByUsernameIgnoreCase(username)) {

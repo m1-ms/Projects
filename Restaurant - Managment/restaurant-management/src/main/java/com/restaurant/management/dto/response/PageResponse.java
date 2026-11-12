@@ -4,11 +4,14 @@ import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
 @Builder
-public class PageResponse<T> {
+public class PageResponse<T> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final List<T> content;
     private final int page;

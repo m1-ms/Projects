@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.OrderRequest;
 import com.restaurant.management.dto.response.OrderResponse;
@@ -17,6 +18,7 @@ import com.restaurant.management.security.CurrentUserService;
 import com.restaurant.management.service.OrderService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -46,6 +48,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.DASHBOARD, allEntries = true)
     public OrderResponse create(OrderRequest request) {
         RestaurantUser user = currentUserService.getCurrentUser();
 

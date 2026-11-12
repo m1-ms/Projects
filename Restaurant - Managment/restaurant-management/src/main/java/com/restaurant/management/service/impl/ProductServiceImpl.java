@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.request.AuditSearchCriteria;
 import com.restaurant.management.dto.request.ProductRequest;
 import com.restaurant.management.dto.request.ProductUpdateRequest;
@@ -20,6 +21,8 @@ import com.restaurant.management.repository.specification.ProductSpecifications;
 import com.restaurant.management.service.ProductService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -46,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'all:' + #page + ':' + #size")
     public PageResponse<ProductResponse> getAll(int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
         Page<ProductResponse> result = productRepository.findAll(pageable).map(productMapper::toResponse);
@@ -54,6 +58,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'category:' + #categoryId + ':' + #page + ':' + #size")
     public PageResponse<ProductResponse> getByCategoryId(Long categoryId, int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
         findCategoryOrThrow(categoryId);
@@ -67,6 +72,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'search:' + #categoryId + ':' + #key?.trim()?.toLowerCase() + ':' + #page + ':' + #size")
     public PageResponse<ProductResponse> search(Long categoryId, String key, int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
         if (categoryId != null) {
@@ -103,12 +109,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'id:' + #id")
     public ProductResponse getById(Long id) {
         return productMapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
     public ProductResponse save(ProductRequest request) {
         Category category = findCategoryOrThrow(request.getCategoryId());
         Product saved = productRepository.save(productMapper.toEntity(request, category));
@@ -117,6 +125,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
     public List<ProductResponse> saveAll(List<ProductRequest> requests) {
         Map<Long, Category> categories = loadCategories(
                 requests.stream().map(ProductRequest::getCategoryId).toList());
@@ -128,6 +137,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
     public ProductResponse update(ProductUpdateRequest request) {
         Product product = findOrThrow(request.getId());
         Category category = findCategoryOrThrow(request.getCategoryId());
@@ -137,6 +147,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
     public List<ProductResponse> updateAll(List<ProductUpdateRequest> requests) {
         Set<Long> seenIds = new HashSet<>();
         for (ProductUpdateRequest request : requests) {
@@ -159,6 +170,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
     public void delete(Long id) {
         Product product = findOrThrow(id);
         assertNotOrdered(product);
@@ -167,6 +179,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
     public void deleteAll(List<Long> ids) {
         Map<Long, Product> products = loadProducts(new HashSet<>(ids));
         products.values().forEach(this::assertNotOrdered);

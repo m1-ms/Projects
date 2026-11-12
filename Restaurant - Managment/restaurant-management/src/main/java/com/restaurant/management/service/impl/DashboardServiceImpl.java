@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.response.DashboardResponse;
 import com.restaurant.management.mapper.DashboardMapper;
 import com.restaurant.management.repository.CategoryRepository;
@@ -9,6 +10,7 @@ import com.restaurant.management.repository.RestaurantOrderRepository;
 import com.restaurant.management.repository.RestaurantUserRepository;
 import com.restaurant.management.service.DashboardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.DASHBOARD, key = "'summary'")
     public DashboardResponse getDashboard() {
         DashboardResponse.Totals totals = new DashboardResponse.Totals(
                 categoryRepository.count(),

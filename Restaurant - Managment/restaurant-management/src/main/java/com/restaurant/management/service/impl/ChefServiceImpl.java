@@ -1,5 +1,6 @@
 package com.restaurant.management.service.impl;
 
+import com.restaurant.management.config.CacheNames;
 import com.restaurant.management.dto.request.ChefRequest;
 import com.restaurant.management.dto.request.ChefUpdateRequest;
 import com.restaurant.management.dto.response.ChefResponse;
@@ -11,6 +12,8 @@ import com.restaurant.management.repository.ChefRepository;
 import com.restaurant.management.service.ChefService;
 import com.restaurant.management.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,6 +29,7 @@ public class ChefServiceImpl implements ChefService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CHEFS, key = "'all:' + #page + ':' + #size")
     public PageResponse<ChefResponse> getAll(int page, int size) {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
         Page<ChefResponse> result = chefRepository.findAll(pageable).map(chefMapper::toResponse);
@@ -34,18 +38,21 @@ public class ChefServiceImpl implements ChefService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CHEFS, key = "'id:' + #id")
     public ChefResponse getById(Long id) {
         return chefMapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CHEFS, CacheNames.DASHBOARD}, allEntries = true)
     public ChefResponse save(ChefRequest request) {
         return chefMapper.toResponse(chefRepository.save(chefMapper.toEntity(request)));
     }
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CHEFS, CacheNames.DASHBOARD}, allEntries = true)
     public ChefResponse update(ChefUpdateRequest request) {
         Chef chef = findOrThrow(request.getId());
         chefMapper.updateEntity(chef, request);
@@ -54,6 +61,7 @@ public class ChefServiceImpl implements ChefService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheNames.CHEFS, CacheNames.DASHBOARD}, allEntries = true)
     public void delete(Long id) {
         chefRepository.delete(findOrThrow(id));
     }
