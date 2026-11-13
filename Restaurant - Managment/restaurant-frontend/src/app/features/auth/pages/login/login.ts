@@ -1,7 +1,10 @@
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
+
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -10,6 +13,9 @@ import { RouterLink } from '@angular/router';
   styleUrl: './login.scss',
 })
 export class Login {
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
   username = '';
   password = '';
 
@@ -18,6 +24,7 @@ export class Login {
 
   errorMessage = '';
   successMessage = '';
+  isLoading = false;
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;
@@ -27,36 +34,40 @@ export class Login {
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (this.username.trim().length < 7) {
-      this.errorMessage = 'Username must contain at least 7 characters.';
+    if (!this.username.trim() || !this.password) {
+      this.errorMessage = 'Please enter your username and password.';
       return;
     }
 
-    if (this.password.length < 7) {
-      this.errorMessage = 'Password must contain at least 7 characters.';
+    if (this.isLoading) {
       return;
     }
 
-    if (!/[A-Z]/.test(this.password)) {
-      this.errorMessage = 'Password must contain an uppercase letter.';
-      return;
-    }
+    this.isLoading = true;
 
-    if (!/[a-z]/.test(this.password)) {
-      this.errorMessage = 'Password must contain a lowercase letter.';
-      return;
-    }
+    this.authService.login({
+      username: this.username.trim(),
+      password: this.password
+    }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
 
-    if (!/[0-9]/.test(this.password)) {
-      this.errorMessage = 'Password must contain a number.';
-      return;
-    }
+        if (!response.success || !response.data) {
+          this.errorMessage = response.message || 'Login failed.';
+          return;
+        }
 
-    if (!/[^A-Za-z0-9]/.test(this.password)) {
-      this.errorMessage = 'Password must contain a special character.';
-      return;
-    }
+        this.successMessage = response.message || 'Login successful.';
 
-    this.successMessage = 'Validation successful. Backend integration is pending.';
+        this.router.navigate(['/']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+
+        this.errorMessage =
+          error.error?.message ||
+          'Unable to login. Please check your credentials and try again.';
+      }
+    });
   }
 }

@@ -82,15 +82,14 @@
                 name="username"
                 [(ngModel)]="username"
                 placeholder="Enter your username"
-                minlength="7"
                 required
                 autocomplete="username"
               />
             </div>
 
-            @if (loginForm.submitted && username.trim().length < 7) {
+            @if (loginForm.submitted && !username.trim()) {
               <small class="field-error">
-                Username must contain at least 7 characters.
+                Please enter your username.
               </small>
             }
           </div>
@@ -108,7 +107,6 @@
                 name="password"
                 [(ngModel)]="password"
                 placeholder="Enter your password"
-                minlength="7"
                 required
                 autocomplete="current-password"
               />
@@ -159,10 +157,10 @@
           <button
             type="submit"
             class="login-submit"
-            [disabled]="!loginForm.valid"
+            [disabled]="!loginForm.valid || isLoading"
           >
-            Sign In
-            <span>→</span>
+            {{ isLoading ? 'Signing In...' : 'Sign In' }}
+            <span>{{ isLoading ? '...' : '→' }}</span>
           </button>
 
         </form>
