@@ -1,3 +1,4 @@
+
 package com.restaurant.management.entity;
 
 import jakarta.persistence.Column;
@@ -25,6 +26,9 @@ public class RestaurantUserDetails extends BaseAuditEntity {
 
     @Column(name = "age", nullable = false)
     private Integer age;
+
+    @Column(name = "email", unique = true, length = 150)
+    private String email;
 
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;

@@ -1,3 +1,4 @@
+
 package com.restaurant.management.service.impl;
 
 import com.restaurant.management.config.CacheNames;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -44,20 +46,37 @@ public class AuthServiceImpl implements AuthService {
     @CacheEvict(cacheNames = CacheNames.DASHBOARD, allEntries = true)
     public UserResponse signUp(SignUpRequest request) {
         String username = request.getUsername().trim();
+
         if (userRepository.existsByUsernameIgnoreCase(username)) {
             throw new DuplicateResourceException("auth.username.duplicate", username);
         }
+
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+
+        if (userRepository.existsByDetailsEmailIgnoreCase(email)) {
+            throw new DuplicateResourceException("auth.email.duplicate", email);
+        }
+
         RestaurantRole defaultRole = roleRepository.findByCode(RoleCode.USER)
                 .orElseThrow(() -> new IllegalStateException("Default role USER is missing"));
+
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-        RestaurantUser saved = userRepository.save(userMapper.toEntity(request, encodedPassword, defaultRole));
+
+        RestaurantUser saved = userRepository.save(
+                userMapper.toEntity(request, encodedPassword, defaultRole)
+        );
+
         return userMapper.toResponse(saved);
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(request.getUsername().trim(), request.getPassword()));
+                UsernamePasswordAuthenticationToken.unauthenticated(
+                        request.getUsername().trim(),
+                        request.getPassword()
+                )
+        );
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

@@ -1,3 +1,4 @@
+
 package com.restaurant.management.dto.response;
 
 import lombok.Builder;
@@ -12,6 +13,7 @@ public class UserResponse {
 
     private final Long id;
     private final String username;
+    private final String email;
     private final Integer age;
     private final String phoneNumber;
     private final String address;

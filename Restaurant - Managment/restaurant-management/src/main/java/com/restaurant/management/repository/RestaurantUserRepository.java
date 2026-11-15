@@ -20,6 +20,8 @@ public interface RestaurantUserRepository
 
     boolean existsByUsernameIgnoreCase(String username);
 
+    boolean existsByDetailsEmailIgnoreCase(String email);
+
     @Override
     @EntityGraph(attributePaths = "details")
     Page<RestaurantUser> findAll(Specification<RestaurantUser> specification, Pageable pageable);

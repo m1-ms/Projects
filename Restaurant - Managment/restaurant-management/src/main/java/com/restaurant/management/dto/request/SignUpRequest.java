@@ -1,5 +1,7 @@
+
 package com.restaurant.management.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -19,6 +21,11 @@ public class SignUpRequest {
     @Size(min = 7, max = 50, message = "{auth.username.size}")
     @Pattern(regexp = "^[A-Za-z0-9._-]*$", message = "{auth.username.pattern}")
     private String username;
+
+    @NotBlank(message = "{auth.email.required}")
+    @Email(message = "{auth.email.invalid}")
+    @Size(max = 150, message = "{auth.email.size}")
+    private String email;
 
     @NotBlank(message = "{auth.password.required}")
     @Size(min = 7, max = 64, message = "{auth.password.size}")
