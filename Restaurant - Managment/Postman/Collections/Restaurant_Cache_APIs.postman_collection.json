@@ -1,0 +1,1344 @@
+{
+  "info": {
+    "name": "Restaurant - Redis Cache APIs (stale data checks)",
+    "description": "Fills the cache with a read, changes the data, then reads again and expects the new data. Creates one user (no delete-user API) and removes everything else.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "00 - Login as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.collectionVariables.set(\"token\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{adminUser}}\", \"password\": \"{{adminPassword}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K01 - Create a category",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"suffix\", Date.now().toString().slice(-6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"catId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"CacheTest Cat {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K02 - Read it by id (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"original name\", () => pm.expect(j.data.name).to.eql(\"CacheTest Cat \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/{{catId}}"
+      }
+    },
+    {
+      "name": "K03 - Read it again (served from the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"same name\", () => pm.expect(j.data.name).to.eql(\"CacheTest Cat \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/{{catId}}"
+      }
+    },
+    {
+      "name": "K04 - Search by key (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"one result\", () => pm.expect(j.data.totalElements).to.eql(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/search?key=CacheTest%20Cat%20{{suffix}}"
+      }
+    },
+    {
+      "name": "K05 - Rename the category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{catId}}, \"name\": \"CacheTest Renamed {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K06 - STALE CHECK: by id shows the new name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"renamed\", () => pm.expect(j.data.name).to.eql(\"CacheTest Renamed \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/{{catId}}"
+      }
+    },
+    {
+      "name": "K07 - STALE CHECK: the old key finds nothing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/search?key=CacheTest%20Cat%20{{suffix}}"
+      }
+    },
+    {
+      "name": "K08 - The new key finds the category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"one result\", () => pm.expect(j.data.totalElements).to.eql(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/search?key=CacheTest%20Renamed%20{{suffix}}"
+      }
+    },
+    {
+      "name": "K10 - Create a product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"prodId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"CacheTest Product {{suffix}}\", \"description\": \"Sample\", \"price\": 9.5, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K11 - Read the product by id (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"price\", () => pm.expect(j.data.price).to.eql(9.5));",
+              "pm.test(\"category name\", () => pm.expect(j.data.categoryName).to.eql(\"CacheTest Renamed \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{prodId}}"
+      }
+    },
+    {
+      "name": "K12 - Products of the category (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"price\", () => pm.expect(j.data.content[0].price).to.eql(9.5));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "K13 - Search products (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"one result\", () => pm.expect(j.data.totalElements).to.eql(1));",
+              "pm.test(\"price\", () => pm.expect(j.data.content[0].price).to.eql(9.5));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=CacheTest%20Product%20{{suffix}}"
+      }
+    },
+    {
+      "name": "K14 - Change the product price",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{prodId}}, \"name\": \"CacheTest Product {{suffix}}\", \"description\": \"Sample\", \"price\": 12.75, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K15 - STALE CHECK: by id shows the new price",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"new price\", () => pm.expect(j.data.price).to.eql(12.75));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{prodId}}"
+      }
+    },
+    {
+      "name": "K16 - STALE CHECK: category listing shows the new price",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"new price\", () => pm.expect(j.data.content[0].price).to.eql(12.75));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "K17 - STALE CHECK: search shows the new price",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"new price\", () => pm.expect(j.data.content[0].price).to.eql(12.75));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=CacheTest%20Product%20{{suffix}}"
+      }
+    },
+    {
+      "name": "K18 - Rename the category again",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{catId}}, \"name\": \"CacheTest Final {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K19 - STALE CHECK: the product shows the new category name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"category name\", () => pm.expect(j.data.categoryName).to.eql(\"CacheTest Final \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{prodId}}"
+      }
+    },
+    {
+      "name": "K20 - STALE CHECK: category listing shows the new category name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"category name\", () => pm.expect(j.data.content[0].categoryName).to.eql(\"CacheTest Final \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "K21 - Add product details",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"detailsId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/product-details",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"productId\": {{prodId}}, \"ingredients\": \"A\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K22 - Read the details by product (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"ingredients\", () => pm.expect(j.data.ingredients).to.eql(\"A\"));",
+              "pm.test(\"product name\", () => pm.expect(j.data.productName).to.eql(\"CacheTest Product \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/product/{{prodId}}"
+      }
+    },
+    {
+      "name": "K23 - Read the details by id (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"ingredients\", () => pm.expect(j.data.ingredients).to.eql(\"A\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/{{detailsId}}"
+      }
+    },
+    {
+      "name": "K24 - Update the details",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/product-details",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{detailsId}}, \"ingredients\": \"B\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K25 - STALE CHECK: by product shows the new ingredients",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"ingredients\", () => pm.expect(j.data.ingredients).to.eql(\"B\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/product/{{prodId}}"
+      }
+    },
+    {
+      "name": "K26 - STALE CHECK: by id shows the new ingredients",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"ingredients\", () => pm.expect(j.data.ingredients).to.eql(\"B\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/{{detailsId}}"
+      }
+    },
+    {
+      "name": "K27 - Rename the product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{prodId}}, \"name\": \"CacheTest Product2 {{suffix}}\", \"description\": \"Sample\", \"price\": 12.75, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K28 - STALE CHECK: the details show the new product name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"product name\", () => pm.expect(j.data.productName).to.eql(\"CacheTest Product2 \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/product/{{prodId}}"
+      }
+    },
+    {
+      "name": "K29 - Delete the details",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details?id={{detailsId}}"
+      }
+    },
+    {
+      "name": "K30 - STALE CHECK: by product is gone",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/product/{{prodId}}"
+      }
+    },
+    {
+      "name": "K31 - STALE CHECK: by id is gone",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/product-details/{{detailsId}}"
+      }
+    },
+    {
+      "name": "K32 - Create a chef",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"chefId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"CacheTest Chef {{suffix}}\", \"specialization\": \"Grill\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K33 - Read the chef (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"name\", () => pm.expect(j.data.name).to.eql(\"CacheTest Chef \" + pm.collectionVariables.get(\"suffix\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/{{chefId}}"
+      }
+    },
+    {
+      "name": "K34 - Update the chef",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{chefId}}, \"name\": \"CacheTest Chef2 {{suffix}}\", \"specialization\": \"BBQ\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K35 - STALE CHECK: the chef shows the new data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"name\", () => pm.expect(j.data.name).to.eql(\"CacheTest Chef2 \" + pm.collectionVariables.get(\"suffix\")));",
+              "pm.test(\"specialization\", () => pm.expect(j.data.specialization).to.eql(\"BBQ\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/{{chefId}}"
+      }
+    },
+    {
+      "name": "K36 - Delete the chef",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?id={{chefId}}"
+      }
+    },
+    {
+      "name": "K37 - STALE CHECK: the chef is gone",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/{{chefId}}"
+      }
+    },
+    {
+      "name": "K38 - Dashboard (fills the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.collectionVariables.set(\"before\", JSON.stringify(j.data.totals));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "K39 - Dashboard again (served from the cache)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const before = JSON.parse(pm.collectionVariables.get(\"before\"));",
+              "pm.test(\"same totals\", () => pm.expect(j.data.totals).to.eql(before));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "K40 - Create a category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"dashCatId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"CacheTest Dash {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K41 - STALE CHECK: dashboard counts the new category at once",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const before = JSON.parse(pm.collectionVariables.get(\"before\"));",
+              "pm.test(\"one more category\", () => pm.expect(j.data.totals.categories).to.eql(before.categories + 1));",
+              "pm.test(\"it is the newest category\", () => pm.expect(j.data.recentCategories[0].id).to.eql(Number(pm.collectionVariables.get(\"dashCatId\"))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "K42 - Sign up a user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/signup",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"cachetest{{suffix}}\", \"password\": \"Passw0rd!\", \"age\": 25 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "K43 - STALE CHECK: dashboard counts the new user at once",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const before = JSON.parse(pm.collectionVariables.get(\"before\"));",
+              "pm.test(\"one more user\", () => pm.expect(j.data.totals.users).to.eql(before.users + 1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "K44 - Delete the category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories?id={{dashCatId}}"
+      }
+    },
+    {
+      "name": "K45 - STALE CHECK: dashboard no longer counts it",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const before = JSON.parse(pm.collectionVariables.get(\"before\"));",
+              "pm.test(\"categories are back\", () => pm.expect(j.data.totals.categories).to.eql(before.categories));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "K46 - Delete the product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?id={{prodId}}"
+      }
+    },
+    {
+      "name": "K47 - STALE CHECK: the product is gone",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{prodId}}"
+      }
+    },
+    {
+      "name": "K48 - STALE CHECK: the category has no products any more",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "K49 - Delete the category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories?id={{catId}}"
+      }
+    },
+    {
+      "name": "K50 - STALE CHECK: the category is gone",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/{{catId}}"
+      }
+    },
+    {
+      "name": "K51 - STALE CHECK: the category search finds nothing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/search?key=CacheTest%20Renamed%20{{suffix}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "suffix",
+      "value": ""
+    },
+    {
+      "key": "adminUser",
+      "value": "adminuser"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "catId",
+      "value": ""
+    },
+    {
+      "key": "prodId",
+      "value": ""
+    },
+    {
+      "key": "detailsId",
+      "value": ""
+    },
+    {
+      "key": "chefId",
+      "value": ""
+    },
+    {
+      "key": "dashCatId",
+      "value": ""
+    },
+    {
+      "key": "before",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,893 @@
+{
+  "info": {
+    "name": "Restaurant - Chef APIs",
+    "description": "Run with the Collection Runner. Creates its own chefs (random suffix) and removes them at the end.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Login as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"token returned\", () => pm.expect(j.data.token).to.be.a(\"string\"));",
+              "pm.collectionVariables.set(\"token\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{adminUser}}\", \"password\": \"{{adminPassword}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "01 - Save one chef",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"suffix\", Date.now().toString().slice(-6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"fields saved\", () => { pm.expect(j.data.name).to.eql(\"Chef Ali \" + pm.collectionVariables.get(\"suffix\")); pm.expect(j.data.specialization).to.eql(\"Grill\"); pm.expect(j.data.facebookLink).to.eql(\"https://facebook.com/chef.ali\"); });",
+              "pm.test(\"audit fields filled\", () => { pm.expect(j.data.createdDate).to.not.eql(null); pm.expect(j.data.createdBy).to.eql(pm.collectionVariables.get(\"adminUser\")); });",
+              "pm.collectionVariables.set(\"chefId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Chef Ali {{suffix}}\",\n  \"specialization\": \"Grill\",\n  \"logoPath\": \"/img/chef.png\",\n  \"facebookLink\": \"https://facebook.com/chef.ali\",\n  \"twitterLink\": \"https://twitter.com/chef_ali\",\n  \"instagramLink\": \"https://instagram.com/chef.ali\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "02 - Save a second chef (links are optional)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"links are null\", () => { pm.expect(j.data.facebookLink).to.eql(null); pm.expect(j.data.logoPath).to.eql(null); });",
+              "pm.collectionVariables.set(\"chef2Id\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Chef Sara {{suffix}}\", \"specialization\": \"Pastry\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "03 - Get by id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"id matches\", () => pm.expect(j.data.id).to.eql(Number(pm.collectionVariables.get(\"chefId\"))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/{{chefId}}"
+      }
+    },
+    {
+      "name": "04 - Get by id (Arabic message)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"Arabic success message\", () => pm.expect(j.message).to.eql(\"تم استرجاع البيانات بنجاح\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs/{{chefId}}"
+      }
+    },
+    {
+      "name": "05 - Get all (ordered by id ASC)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(c => c.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });",
+              "pm.test(\"pagination metadata\", () => { pm.expect(j.data.page).to.eql(1); pm.expect(j.data).to.have.property(\"totalElements\"); pm.expect(j.data).to.have.property(\"totalPages\"); });",
+              "pm.test(\"at least the 2 chefs created here\", () => pm.expect(j.data.totalElements).to.be.at.least(2));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?page=1&size=50"
+      }
+    },
+    {
+      "name": "06 - Get all with size 1 (pagination)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"one item per page\", () => { pm.expect(j.data.content.length).to.eql(1); pm.expect(j.data.size).to.eql(1); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?page=1&size=1"
+      }
+    },
+    {
+      "name": "07 - Update chef",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"fields updated\", () => { pm.expect(j.data.name).to.include(\"Updated\"); pm.expect(j.data.specialization).to.eql(\"BBQ\"); pm.expect(j.data.facebookLink).to.eql(\"http://facebook.com/ali2\"); });",
+              "pm.test(\"updatedBy filled\", () => pm.expect(j.data.updatedBy).to.eql(pm.collectionVariables.get(\"adminUser\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": {{chefId}},\n  \"name\": \"Chef Ali Updated {{suffix}}\",\n  \"specialization\": \"BBQ\",\n  \"logoPath\": \"/img/chef2.png\",\n  \"facebookLink\": \"http://facebook.com/ali2\",\n  \"twitterLink\": \"https://twitter.com/ali2\",\n  \"instagramLink\": \"https://instagram.com/ali2\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "08 - Update chef: clear the links (empty strings become null)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"links cleared\", () => { pm.expect(j.data.facebookLink).to.eql(null); pm.expect(j.data.twitterLink).to.eql(null); pm.expect(j.data.instagramLink).to.eql(null); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{chefId}}, \"name\": \"Chef Ali Updated {{suffix}}\", \"specialization\": \"BBQ\", \"facebookLink\": \"\", \"twitterLink\": \"\", \"instagramLink\": \"\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "09 - ERROR: validation (English)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message is Validation failed\", () => pm.expect(j.message).to.eql(\"Validation failed\"));",
+              "pm.test(\"English field errors\", () => { pm.expect(j.errors.name).to.eql(\"Chef name is required\"); pm.expect(j.errors.specialization).to.eql(\"Chef specialization is required\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10 - ERROR: validation (Arabic)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"Arabic validation message\", () => pm.expect(j.message).to.eql(\"فشل التحقق من البيانات\"));",
+              "pm.test(\"Arabic field errors\", () => { pm.expect(j.errors.name).to.eql(\"اسم الشيف مطلوب\"); pm.expect(j.errors.specialization).to.eql(\"تخصص الشيف مطلوب\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "11 - ERROR: name longer than 100 chars -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"size error\", () => pm.expect(j.errors.name).to.eql(\"Chef name must not exceed 100 characters\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"specialization\": \"Grill\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "12 - ERROR: Facebook link without http/https -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"link error\", () => pm.expect(j.errors).to.have.property(\"facebookLink\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Chef X\", \"specialization\": \"Grill\", \"facebookLink\": \"www.facebook.com/chef\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "13 - ERROR: Twitter and Instagram links invalid -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"both link errors\", () => { pm.expect(j.errors).to.have.property(\"twitterLink\"); pm.expect(j.errors).to.have.property(\"instagramLink\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Chef X\", \"specialization\": \"Grill\", \"twitterLink\": \"twitter\", \"instagramLink\": \"ftp://x.com/y\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "14 - ERROR: link longer than 255 chars -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"link error\", () => pm.expect(j.errors).to.have.property(\"instagramLink\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Chef X\", \"specialization\": \"Grill\", \"instagramLink\": \"http://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "15 - ERROR: update without id -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"id error\", () => pm.expect(j.errors.id).to.eql(\"Chef ID is required\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Chef X\", \"specialization\": \"Grill\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "16 - ERROR: update unknown id -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": 99999999, \"name\": \"Ghost\", \"specialization\": \"None\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "17 - ERROR: chef id not found -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/99999999"
+      }
+    },
+    {
+      "name": "18 - ERROR: chef id not found (Arabic) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"Arabic message\", () => pm.expect(j.message).to.include(\"لم يتم العثور على شيف\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs/99999999"
+      }
+    },
+    {
+      "name": "19 - ERROR: chef id is not a number -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/abc"
+      }
+    },
+    {
+      "name": "20 - ERROR: page=0 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"pagination message\", () => pm.expect(j.message).to.eql(\"Page number must be 1 or greater\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?page=0&size=10"
+      }
+    },
+    {
+      "name": "21 - ERROR: size=100 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"pagination message\", () => pm.expect(j.message).to.eql(\"Page size must be between 1 and 50\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?page=1&size=100"
+      }
+    },
+    {
+      "name": "22 - ERROR: negative id on delete -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?id=-1"
+      }
+    },
+    {
+      "name": "23 - ERROR: malformed JSON -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"malformed JSON message\", () => pm.expect(j.message).to.eql(\"Malformed JSON request body\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/chefs",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": ",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "24 - Delete chef by id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?id={{chefId}}"
+      }
+    },
+    {
+      "name": "25 - Verify chef is gone -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs/{{chefId}}"
+      }
+    },
+    {
+      "name": "26 - ERROR: delete the same chef again -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?id={{chefId}}"
+      }
+    },
+    {
+      "name": "27 - Cleanup: delete the second chef",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/chefs?id={{chef2Id}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "suffix",
+      "value": ""
+    },
+    {
+      "key": "chefId",
+      "value": ""
+    },
+    {
+      "key": "chef2Id",
+      "value": ""
+    },
+    {
+      "key": "adminUser",
+      "value": "adminuser"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

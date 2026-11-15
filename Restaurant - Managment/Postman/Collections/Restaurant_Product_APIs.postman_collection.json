@@ -1,0 +1,1444 @@
+{
+  "info": {
+    "name": "Restaurant - Product APIs",
+    "description": "Run with the Collection Runner. It creates its own categories (random suffix) and removes everything at the end.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Login as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"token returned\", () => pm.expect(j.data.token).to.be.a(\"string\"));",
+              "pm.collectionVariables.set(\"token\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{adminUser}}\", \"password\": \"{{adminPassword}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "01 - Setup: create category A",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"suffix\", Date.now().toString().slice(-6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"catId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Menu A {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "02 - Setup: create category B",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"cat2Id\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Menu B {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "03 - Save one product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"price saved\", () => pm.expect(j.data.price).to.eql(9.5));",
+              "pm.test(\"category name returned\", () => pm.expect(j.data.categoryName).to.eql(\"Menu A \" + pm.collectionVariables.get(\"suffix\")));",
+              "pm.test(\"audit fields filled\", () => { pm.expect(j.data.createdDate).to.not.eql(null); pm.expect(j.data.createdBy).to.eql(pm.collectionVariables.get(\"adminUser\")); });",
+              "pm.collectionVariables.set(\"productId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Burger {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 9.5, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "04 - Save list (2 products)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"two products saved\", () => pm.expect(j.data.length).to.eql(2));",
+              "pm.collectionVariables.set(\"p2Id\", j.data[0].id);",
+              "pm.collectionVariables.set(\"p3Id\", j.data[1].id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/bulk",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  { \"name\": \"Pizza {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 11, \"categoryId\": {{catId}} },\n  { \"name\": \"Cake {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 6.5, \"categoryId\": {{catId}} }\n]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "05 - Get by id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"id matches\", () => pm.expect(j.data.id).to.eql(Number(pm.collectionVariables.get(\"productId\"))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{productId}}"
+      }
+    },
+    {
+      "name": "06 - Get all (ordered by id ASC)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(p => p.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });",
+              "pm.test(\"pagination metadata\", () => { pm.expect(j.data.page).to.eql(1); pm.expect(j.data).to.have.property(\"totalElements\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?page=1&size=50"
+      }
+    },
+    {
+      "name": "07 - Get by category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"3 products\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"all belong to the category\", () => pm.expect(j.data.content.every(p => p.categoryId === Number(pm.collectionVariables.get(\"catId\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "08 - Update one (change price and move to category B)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"price updated\", () => pm.expect(j.data.price).to.eql(12.75));",
+              "pm.test(\"moved to category B\", () => pm.expect(j.data.categoryId).to.eql(Number(pm.collectionVariables.get(\"cat2Id\"))));",
+              "pm.test(\"updatedBy filled\", () => pm.expect(j.data.updatedBy).to.eql(pm.collectionVariables.get(\"adminUser\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"id\": {{productId}}, \"name\": \"Burger Deluxe {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Updated\", \"price\": 12.75, \"categoryId\": {{cat2Id}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "09 - Update list (Pizza moves to category B)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"two products updated\", () => pm.expect(j.data.length).to.eql(2));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/bulk",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  { \"id\": {{p2Id}}, \"name\": \"Pizza Large {{suffix}}\", \"description\": \"Updated\", \"price\": 14, \"categoryId\": {{cat2Id}} },\n  { \"id\": {{p3Id}}, \"name\": \"Cake Slice {{suffix}}\", \"description\": \"Updated\", \"price\": 7, \"categoryId\": {{catId}} }\n]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10 - ERROR: validation (English)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"English field errors\", () => { pm.expect(j.errors.name).to.eql(\"Product name is required\"); pm.expect(j.errors.description).to.eql(\"Product description is required\"); pm.expect(j.errors.price).to.eql(\"Product price is required\"); pm.expect(j.errors.categoryId).to.eql(\"Category ID is required\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "11 - ERROR: validation (Arabic)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"Arabic field error\", () => pm.expect(j.errors.name).to.eql(\"اسم المنتج مطلوب\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "12 - ERROR: price is zero -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"price message\", () => pm.expect(j.errors.price).to.eql(\"Product price must be greater than zero\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Bad {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 0, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "13 - ERROR: price with 3 decimals -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"digits message\", () => pm.expect(j.errors.price).to.eql(\"Product price must have at most 8 digits and 2 decimal places\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Bad {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 1.234, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "14 - ERROR: negative price -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"price message\", () => pm.expect(j.errors.price).to.eql(\"Product price must be greater than zero\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Bad {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": -5, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "15 - ERROR: category not found -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Ghost {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 5, \"categoryId\": 99999999 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "16 - ERROR: update without id -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"id error\", () => pm.expect(j.errors.id).to.eql(\"Product ID is required\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"NoId {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 5, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "17 - ERROR: update unknown id -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"Ghost {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 5, \"categoryId\": {{catId}}, \"id\": 99999999 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "18 - ERROR: bulk save with unknown category -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/bulk",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  { \"name\": \"Ok {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 5, \"categoryId\": {{catId}} },\n  { \"name\": \"Ghost {{suffix}}\", \"imagePath\": \"/img/x.png\", \"description\": \"Sample description\", \"price\": 5, \"categoryId\": 99999999 }\n]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "19 - ERROR: bulk update with duplicate ids -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(pm.collectionVariables.get(\"p3Id\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/bulk",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  { \"id\": {{p3Id}}, \"name\": \"A {{suffix}}\", \"description\": \"d\", \"price\": 5, \"categoryId\": {{catId}} },\n  { \"id\": {{p3Id}}, \"name\": \"B {{suffix}}\", \"description\": \"d\", \"price\": 5, \"categoryId\": {{catId}} }\n]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "20 - ERROR: product id not found -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/99999999"
+      }
+    },
+    {
+      "name": "21 - ERROR: product id is not a number -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/abc"
+      }
+    },
+    {
+      "name": "22 - ERROR: empty list -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/bulk",
+        "body": {
+          "mode": "raw",
+          "raw": "[]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "23 - ERROR: negative id on delete -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?id=-1"
+      }
+    },
+    {
+      "name": "24 - ERROR: page=0 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"pagination message\", () => pm.expect(j.message).to.eql(\"Page number must be 1 or greater\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?page=0&size=10"
+      }
+    },
+    {
+      "name": "25 - ERROR: size=100 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"pagination message\", () => pm.expect(j.message).to.eql(\"Page size must be between 1 and 50\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?page=1&size=100"
+      }
+    },
+    {
+      "name": "26 - ERROR: products of unknown category -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/99999999"
+      }
+    },
+    {
+      "name": "S1 - Search by name (case-insensitive)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"one result: Pizza\", () => { pm.expect(j.data.content.length).to.eql(1); pm.expect(j.data.content[0].name).to.include(\"Pizza Large\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=PIZZA%20LARGE%20{{suffix}}"
+      }
+    },
+    {
+      "name": "S2 - Search by description + category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"one result: Cake\", () => { pm.expect(j.data.content.length).to.eql(1); pm.expect(j.data.content[0].name).to.include(\"Cake Slice\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=UPDATED&categoryId={{catId}}"
+      }
+    },
+    {
+      "name": "S3 - Search by key only (matches the 3 products)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"3 products\", () => pm.expect(j.data.totalElements).to.eql(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key={{suffix}}"
+      }
+    },
+    {
+      "name": "S4 - Search by key + category B",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"2 products\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"all in category B\", () => pm.expect(j.data.content.every(p => p.categoryId === Number(pm.collectionVariables.get(\"cat2Id\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key={{suffix}}&categoryId={{cat2Id}}"
+      }
+    },
+    {
+      "name": "S5 - Search by category only",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"2 products\", () => pm.expect(j.data.totalElements).to.eql(2));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?categoryId={{cat2Id}}"
+      }
+    },
+    {
+      "name": "S6 - Search pagination, page 1 (size 2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"2 items, 3 total, 2 pages\", () => { pm.expect(j.data.content.length).to.eql(2); pm.expect(j.data.totalElements).to.eql(3); pm.expect(j.data.totalPages).to.eql(2); });",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(p => p.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key={{suffix}}&page=1&size=2"
+      }
+    },
+    {
+      "name": "S7 - Search pagination, page 2 (size 2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"1 item on the last page\", () => { pm.expect(j.data.content.length).to.eql(1); pm.expect(j.data.last).to.eql(true); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key={{suffix}}&page=2&size=2"
+      }
+    },
+    {
+      "name": "S8 - ERROR: no match (English) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"no-data message\", () => pm.expect(j.message).to.eql(\"No products found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=zzzz{{suffix}}"
+      }
+    },
+    {
+      "name": "S9 - ERROR: no match (Arabic) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"Arabic no-data message\", () => pm.expect(j.message).to.eql(\"لا توجد منتجات\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/search?key=zzzz{{suffix}}"
+      }
+    },
+    {
+      "name": "S10 - ERROR: key matches but not in this category -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=PIZZA%20LARGE%20{{suffix}}&categoryId={{catId}}"
+      }
+    },
+    {
+      "name": "S11 - ERROR: unknown category -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the id\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=a&categoryId=99999999"
+      }
+    },
+    {
+      "name": "S12 - ERROR: page=0 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=a&page=0"
+      }
+    },
+    {
+      "name": "S13 - ERROR: negative category id -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?categoryId=-1"
+      }
+    },
+    {
+      "name": "S14 - ERROR: key longer than 100 chars -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "27 - ERROR: delete category that has products -> 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message mentions the category\", () => pm.expect(j.message).to.include(\"Menu B\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories?id={{cat2Id}}"
+      }
+    },
+    {
+      "name": "28 - ERROR: delete category that has products (Arabic) -> 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"Arabic message\", () => pm.expect(j.message).to.include(\"لا يمكن حذف الفئة\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/bulk?ids={{catId}}"
+      }
+    },
+    {
+      "name": "29 - Delete product by id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?id={{productId}}"
+      }
+    },
+    {
+      "name": "30 - Verify product is gone -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{productId}}"
+      }
+    },
+    {
+      "name": "31 - Delete multiple products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/bulk?ids={{p2Id}},{{p3Id}}"
+      }
+    },
+    {
+      "name": "32 - Verify deleted -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/{{p2Id}}"
+      }
+    },
+    {
+      "name": "33 - Category with no products -> 404 (English)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"no-data message\", () => pm.expect(j.message).to.eql(\"No products found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "34 - Category with no products -> 404 (Arabic)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"Arabic no-data message\", () => pm.expect(j.message).to.eql(\"لا توجد منتجات\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/category/{{catId}}"
+      }
+    },
+    {
+      "name": "35 - Cleanup: delete both categories",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/bulk?ids={{catId}},{{cat2Id}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "suffix",
+      "value": ""
+    },
+    {
+      "key": "catId",
+      "value": ""
+    },
+    {
+      "key": "cat2Id",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "p2Id",
+      "value": ""
+    },
+    {
+      "key": "p3Id",
+      "value": ""
+    },
+    {
+      "key": "adminUser",
+      "value": "adminuser"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

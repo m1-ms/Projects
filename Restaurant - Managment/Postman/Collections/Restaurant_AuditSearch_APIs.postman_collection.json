@@ -1,0 +1,1965 @@
+{
+  "info": {
+    "name": "Restaurant - Audit Search APIs (Products and Categories)",
+    "description": "Creates its own categories, products and one normal user (random suffix) and removes the categories and products at the end.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "00 - Login as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.collectionVariables.set(\"token\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{adminUser}}\", \"password\": \"{{adminPassword}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "01 - Setup: create category A",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"suffix\", Date.now().toString().slice(-6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"catAId\", j.data.id);",
+              "pm.collectionVariables.set(\"today\", j.data.createdDate.substring(0, 10));",
+              "const d = new Date(j.data.createdDate.substring(0, 10) + \"T00:00:00Z\"); d.setUTCDate(d.getUTCDate() + 1); pm.collectionVariables.set(\"tomorrow\", d.toISOString().substring(0, 10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AudSearch Cat A {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "02 - Setup: create category B",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"catBId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AudSearch Cat B {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "03 - Setup: create product 1 (category A)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"p1Id\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AudSearch Burger {{suffix}}\", \"description\": \"grilled beef {{suffix}}\", \"price\": 9.5, \"categoryId\": {{catAId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "04 - Setup: create product 2 (category A)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"p2Id\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AudSearch Pizza {{suffix}}\", \"description\": \"stone oven {{suffix}}\", \"price\": 9.5, \"categoryId\": {{catAId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "05 - Setup: create product 3 (category B)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"p3Id\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AudSearch Cake {{suffix}}\", \"description\": \"sweet {{suffix}}\", \"price\": 9.5, \"categoryId\": {{catBId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "06 - Setup: sign up a normal user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"userU\", j.data.username);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/signup",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"audusera{{suffix}}\", \"password\": \"Passw0rd!\", \"age\": 25 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "07 - Setup: log in the normal user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"tokenU\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{userU}}\", \"password\": \"Passw0rd!\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "C01 - Categories: no criteria lists all (ordered by name ASC)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"ordered by name ASC\", () => { const n = j.data.content.map(o => o.name); pm.expect(n).to.eql([...n].sort()); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?page=1&size=50"
+      }
+    },
+    {
+      "name": "C02 - Categories: by key only",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"ordered by name ASC\", () => { const n = j.data.content.map(o => o.name); pm.expect(n).to.eql([...n].sort()); });",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"catAId\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"catBId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}"
+      }
+    },
+    {
+      "name": "C03 - Categories: by createdBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"every item has createdBy = the searched value\", () => pm.expect(j.data.content.every(o => o.createdBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}&createdBy={{adminUser}}"
+      }
+    },
+    {
+      "name": "C04 - Categories: by createdBy = system (the seeded ones)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"every item has createdBy = the searched value\", () => pm.expect(j.data.content.every(o => o.createdBy === \"system\")).to.eql(true));",
+              "pm.test(\"does not contain other items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"catAId\"))); pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"catBId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdBy=system&page=1&size=50"
+      }
+    },
+    {
+      "name": "C05 - Categories: by updatedBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"every item has updatedBy = the searched value\", () => pm.expect(j.data.content.every(o => o.updatedBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}&updatedBy={{adminUser}}"
+      }
+    },
+    {
+      "name": "C06 - Categories: by creation date range",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"every item has createdDate on the searched day\", () => pm.expect(j.data.content.every(o => o.createdDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdFrom={{today}}&createdTo={{today}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C07 - Categories: by update date range",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"every item has updatedDate on the searched day\", () => pm.expect(j.data.content.every(o => o.updatedDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?updatedFrom={{today}}&updatedTo={{today}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C08 - Categories: creation date + createdBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"every item has createdDate on the searched day\", () => pm.expect(j.data.content.every(o => o.createdDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));",
+              "pm.test(\"every item has createdBy = the searched value\", () => pm.expect(j.data.content.every(o => o.createdBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdFrom={{today}}&createdTo={{today}}&createdBy={{adminUser}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C09 - Categories: update date + updatedBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"every item has updatedDate on the searched day\", () => pm.expect(j.data.content.every(o => o.updatedDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));",
+              "pm.test(\"every item has updatedBy = the searched value\", () => pm.expect(j.data.content.every(o => o.updatedBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?updatedFrom={{today}}&updatedTo={{today}}&updatedBy={{adminUser}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C10 - Categories: all criteria together",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"catAId\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"catBId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdFrom={{today}}&createdTo={{today}}&updatedFrom={{today}}&updatedTo={{today}}&createdBy={{adminUser}}&updatedBy={{adminUser}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C11 - Categories: user name in upper case",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdBy=ADMINUSER&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C12 - Categories: key matches one category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 1 items\", () => pm.expect(j.data.totalElements).to.eql(1));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"catBId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key=Cat%20B%20{{suffix}}"
+      }
+    },
+    {
+      "name": "C13 - ERROR: nothing matches (English) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"No categories found matching your search\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdFrom=2000-01-01&createdTo=2000-01-02"
+      }
+    },
+    {
+      "name": "C14 - ERROR: nothing matches (Arabic) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"لم يتم العثور على فئات مطابقة للبحث\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdFrom=2000-01-01&createdTo=2000-01-02"
+      }
+    },
+    {
+      "name": "C15 - ERROR: a future start date -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?updatedFrom={{tomorrow}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C16 - ERROR: contradictory users -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdBy=system&updatedBy={{adminUser}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "C17 - ERROR: the % wildcard is taken literally -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"No categories found matching your search\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?key=%25"
+      }
+    },
+    {
+      "name": "C18 - ERROR: the _ wildcard is taken literally -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?key=_"
+      }
+    },
+    {
+      "name": "C19 - ERROR: creation range with start after end -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"Creation date range\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdFrom={{tomorrow}}&createdTo={{today}}"
+      }
+    },
+    {
+      "name": "C20 - ERROR: update range with start after end -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"Update date range\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?updatedFrom={{tomorrow}}&updatedTo={{today}}"
+      }
+    },
+    {
+      "name": "C21 - ERROR: invalid date -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"createdTo\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?createdTo=2026-02-30x"
+      }
+    },
+    {
+      "name": "C22 - ERROR: user name longer than 50 characters -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Validation failed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?updatedBy=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "C23 - ERROR: key longer than 100 characters -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Validation failed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "C24 - Categories: pagination, page 1 (size 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"one item, two pages\", () => { pm.expect(j.data.content.length).to.eql(1); pm.expect(j.data.totalPages).to.eql(2); });",
+              "pm.test(\"name ASC: category A first\", () => pm.expect(j.data.content[0].id).to.eql(Number(pm.collectionVariables.get(\"catAId\"))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}&page=1&size=1"
+      }
+    },
+    {
+      "name": "C25 - Categories: pagination, page 2 (size 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"category B on the last page\", () => { pm.expect(j.data.content[0].id).to.eql(Number(pm.collectionVariables.get(\"catBId\"))); pm.expect(j.data.last).to.eql(true); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}&page=2&size=1"
+      }
+    },
+    {
+      "name": "C26 - ERROR: page=0 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Page number must be 1 or greater\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?page=0"
+      }
+    },
+    {
+      "name": "C27 - ERROR: size=100 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Page size must be between 1 and 50\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?size=100"
+      }
+    },
+    {
+      "name": "C28 - ERROR: USER cannot use the audit search -> 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"You do not have permission to access this resource\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{tokenU}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "C29 - ERROR: no token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/audit-search?key={{suffix}}",
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "P01 - Products: by key only (name or description)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p1Id\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p2Id\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p3Id\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}"
+      }
+    },
+    {
+      "name": "P02 - Products: key + category A",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p1Id\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p2Id\"))); });",
+              "pm.test(\"does not contain other items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"p3Id\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}&categoryId={{catAId}}"
+      }
+    },
+    {
+      "name": "P03 - Products: key found in the description only",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 1 items\", () => pm.expect(j.data.totalElements).to.eql(1));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p1Id\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key=beef%20{{suffix}}"
+      }
+    },
+    {
+      "name": "P04 - Products: category only (with the key to isolate this run)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 1 items\", () => pm.expect(j.data.totalElements).to.eql(1));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p3Id\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?categoryId={{catBId}}"
+      }
+    },
+    {
+      "name": "P05 - Products: by createdBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"every item has createdBy = the searched value\", () => pm.expect(j.data.content.every(o => o.createdBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}&createdBy={{adminUser}}"
+      }
+    },
+    {
+      "name": "P06 - Products: by updatedBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"every item has updatedBy = the searched value\", () => pm.expect(j.data.content.every(o => o.updatedBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}&updatedBy={{adminUser}}"
+      }
+    },
+    {
+      "name": "P07 - Products: by creation date range",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"every item has createdDate on the searched day\", () => pm.expect(j.data.content.every(o => o.createdDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?createdFrom={{today}}&createdTo={{today}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P08 - Products: by update date range",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"every item has updatedDate on the searched day\", () => pm.expect(j.data.content.every(o => o.updatedDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?updatedFrom={{today}}&updatedTo={{today}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P09 - Products: creation date + createdBy + category B",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 1 items\", () => pm.expect(j.data.totalElements).to.eql(1));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p3Id\"))); });",
+              "pm.test(\"every item has createdDate on the searched day\", () => pm.expect(j.data.content.every(o => o.createdDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?createdFrom={{today}}&createdTo={{today}}&createdBy={{adminUser}}&categoryId={{catBId}}"
+      }
+    },
+    {
+      "name": "P10 - Products: update date + updatedBy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));",
+              "pm.test(\"every item has updatedDate on the searched day\", () => pm.expect(j.data.content.every(o => o.updatedDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));",
+              "pm.test(\"every item has updatedBy = the searched value\", () => pm.expect(j.data.content.every(o => o.updatedBy === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?updatedFrom={{today}}&updatedTo={{today}}&updatedBy={{adminUser}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P11 - Products: all criteria together",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 items\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"contains the expected items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p1Id\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"p2Id\"))); });",
+              "pm.test(\"does not contain other items\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"p3Id\"))); });",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?createdFrom={{today}}&createdTo={{today}}&updatedFrom={{today}}&updatedTo={{today}}&createdBy={{adminUser}}&updatedBy={{adminUser}}&categoryId={{catAId}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P12 - Products: only an end date (open start)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?createdTo={{today}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P13 - Products: user name in upper case",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?createdBy=ADMINUSER&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P14 - ERROR: nothing matches (English) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"No products found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?createdFrom=2000-01-01&createdTo=2000-01-02"
+      }
+    },
+    {
+      "name": "P15 - ERROR: nothing matches (Arabic) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"لا توجد منتجات\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?createdFrom=2000-01-01&createdTo=2000-01-02"
+      }
+    },
+    {
+      "name": "P16 - ERROR: key exists but not in this category -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key=beef%20{{suffix}}&categoryId={{catBId}}"
+      }
+    },
+    {
+      "name": "P17 - ERROR: contradictory users -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?createdBy={{adminUser}}&updatedBy={{userU}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P18 - ERROR: the % wildcard is taken literally -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"No products found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?key=%25"
+      }
+    },
+    {
+      "name": "P19 - ERROR: category does not exist -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"99999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?categoryId=99999999&key={{suffix}}"
+      }
+    },
+    {
+      "name": "P20 - ERROR: negative category id -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Validation failed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?categoryId=-1"
+      }
+    },
+    {
+      "name": "P21 - ERROR: creation range with start after end -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"Creation date range\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?createdFrom={{tomorrow}}&createdTo={{today}}"
+      }
+    },
+    {
+      "name": "P22 - ERROR: update range with start after end -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"Update date range\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?updatedFrom={{tomorrow}}&updatedTo={{today}}"
+      }
+    },
+    {
+      "name": "P23 - ERROR: invalid date -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"updatedFrom\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?updatedFrom=abc"
+      }
+    },
+    {
+      "name": "P24 - ERROR: user name longer than 50 characters -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Validation failed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?createdBy=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "P25 - ERROR: key longer than 100 characters -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Validation failed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "P26 - Products: pagination, page 1 (size 2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"2 items, 3 total, 2 pages\", () => { pm.expect(j.data.content.length).to.eql(2); pm.expect(j.data.totalElements).to.eql(3); pm.expect(j.data.totalPages).to.eql(2); });",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}&page=1&size=2"
+      }
+    },
+    {
+      "name": "P27 - Products: pagination, page 2 (size 2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"the last product on the last page\", () => { pm.expect(j.data.content.length).to.eql(1); pm.expect(j.data.content[0].id).to.eql(Number(pm.collectionVariables.get(\"p3Id\"))); pm.expect(j.data.last).to.eql(true); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}&page=2&size=2"
+      }
+    },
+    {
+      "name": "P28 - ERROR: page=0 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Page number must be 1 or greater\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?page=0"
+      }
+    },
+    {
+      "name": "P29 - ERROR: size=100 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Page size must be between 1 and 50\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?size=100"
+      }
+    },
+    {
+      "name": "P30 - ERROR: USER cannot use the audit search -> 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"You do not have permission to access this resource\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{tokenU}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "P31 - ERROR: no token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/audit-search?key={{suffix}}",
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "R01 - The existing product search is unchanged",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key={{suffix}}"
+      }
+    },
+    {
+      "name": "R02 - USER can still use the normal product search",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 3 items\", () => pm.expect(j.data.totalElements).to.eql(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/search?key={{suffix}}",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{tokenU}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Z1 - Cleanup: delete the products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/products/bulk?ids={{p1Id}},{{p2Id}},{{p3Id}}"
+      }
+    },
+    {
+      "name": "Z2 - Cleanup: delete the categories",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories/bulk?ids={{catAId}},{{catBId}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "suffix",
+      "value": ""
+    },
+    {
+      "key": "adminUser",
+      "value": "adminuser"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "catAId",
+      "value": ""
+    },
+    {
+      "key": "catBId",
+      "value": ""
+    },
+    {
+      "key": "p1Id",
+      "value": ""
+    },
+    {
+      "key": "p2Id",
+      "value": ""
+    },
+    {
+      "key": "p3Id",
+      "value": ""
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tomorrow",
+      "value": ""
+    },
+    {
+      "key": "userU",
+      "value": ""
+    },
+    {
+      "key": "tokenU",
+      "value": ""
+    }
+  ]
+}

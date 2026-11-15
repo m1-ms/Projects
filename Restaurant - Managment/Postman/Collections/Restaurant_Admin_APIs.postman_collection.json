@@ -1,0 +1,1162 @@
+{
+  "info": {
+    "name": "Restaurant - Admin APIs (Users and Dashboard)",
+    "description": "Creates two users (random suffix; there is no delete-user API, see the cleanup SQL) plus a temporary category and product that it removes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "00 - Login as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.collectionVariables.set(\"token\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{adminUser}}\", \"password\": \"{{adminPassword}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "01 - Setup: sign up user A",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"suffix\", Date.now().toString().slice(-6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"userAId\", j.data.id);",
+              "pm.collectionVariables.set(\"userA\", j.data.username);",
+              "pm.collectionVariables.set(\"userAUpper\", j.data.username.toUpperCase());",
+              "pm.collectionVariables.set(\"today\", j.data.createdDate.substring(0, 10));",
+              "const d = new Date(j.data.createdDate.substring(0, 10) + \"T00:00:00Z\"); d.setUTCDate(d.getUTCDate() + 1); pm.collectionVariables.set(\"tomorrow\", d.toISOString().substring(0, 10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/signup",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"admusera{{suffix}}\", \"password\": \"Passw0rd!\", \"age\": 30, \"phoneNumber\": \"+201000000001\", \"address\": \"Cairo\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "02 - Setup: sign up user B (no phone)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"userBId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/signup",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"admuserb{{suffix}}\", \"password\": \"Passw0rd!\", \"age\": 40 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "03 - Setup: log in user A",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"tokenA\", j.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{userA}}\", \"password\": \"Passw0rd!\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "U01 - List users (paginated, ordered by id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });",
+              "pm.test(\"the password is never returned\", () => pm.expect(j.data.content.every(u => !(\"password\" in u))).to.eql(true));",
+              "pm.test(\"the admin is listed with both roles\", () => { const a = j.data.content.find(u => u.username === pm.collectionVariables.get(\"adminUser\")); pm.expect(a).to.not.eql(undefined); pm.expect(a.roles).to.eql([\"ADMIN\", \"USER\"]); });",
+              "pm.test(\"at least admin, A and B\", () => pm.expect(j.data.totalElements).to.be.at.least(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?page=1&size=50"
+      }
+    },
+    {
+      "name": "U02 - Search by key",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 users\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"ordered by id ASC\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });",
+              "pm.test(\"the password is never returned\", () => pm.expect(j.data.content.every(u => !(\"password\" in u))).to.eql(true));",
+              "pm.test(\"contains the expected users\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"userAId\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"userBId\"))); });",
+              "pm.test(\"details and roles are returned\", () => { const a = j.data.content.find(u => u.id === Number(pm.collectionVariables.get(\"userAId\"))); pm.expect(a.roles).to.eql([\"USER\"]); pm.expect(a.age).to.eql(30); pm.expect(a.phoneNumber).to.eql(\"+201000000001\"); pm.expect(a.address).to.eql(\"Cairo\"); const b = j.data.content.find(u => u.id === Number(pm.collectionVariables.get(\"userBId\"))); pm.expect(b.phoneNumber).to.eql(null); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?key={{suffix}}&page=1&size=50"
+      }
+    },
+    {
+      "name": "U03 - Search by key, upper-case",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 1 users\", () => pm.expect(j.data.totalElements).to.eql(1));",
+              "pm.test(\"contains the expected users\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"userAId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?key={{userAUpper}}"
+      }
+    },
+    {
+      "name": "U04 - Filter by role ADMIN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"every user is an admin\", () => pm.expect(j.data.content.every(u => u.roles.includes(\"ADMIN\"))).to.eql(true));",
+              "pm.test(\"the admin account is listed\", () => pm.expect(j.data.content.some(u => u.username === pm.collectionVariables.get(\"adminUser\"))).to.eql(true));",
+              "pm.test(\"does not contain other users\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"userAId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?role=ADMIN&page=1&size=50"
+      }
+    },
+    {
+      "name": "U05 - Filter by role USER + key",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 users\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"contains the expected users\", () => { const ids = j.data.content.map(o => o.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"userAId\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"userBId\"))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?role=USER&key={{suffix}}"
+      }
+    },
+    {
+      "name": "U06 - ERROR: no admin matches the key -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"No users found matching your search\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?role=ADMIN&key={{suffix}}"
+      }
+    },
+    {
+      "name": "U07 - Filter by registration date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 users\", () => pm.expect(j.data.totalElements).to.eql(2));",
+              "pm.test(\"registered on the searched day\", () => pm.expect(j.data.content.every(u => u.createdDate.startsWith(pm.collectionVariables.get(\"today\")))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom={{today}}&createdTo={{today}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "U08 - Registration date + role + key",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"exactly 2 users\", () => pm.expect(j.data.totalElements).to.eql(2));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom={{today}}&createdTo={{today}}&role=USER&key={{suffix}}"
+      }
+    },
+    {
+      "name": "U09 - ERROR: nothing matches (English) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"No users found matching your search\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom=2000-01-01&createdTo=2000-01-02"
+      }
+    },
+    {
+      "name": "U10 - ERROR: nothing matches (Arabic) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"لم يتم العثور على مستخدمين مطابقين للبحث\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom=2000-01-01&createdTo=2000-01-02"
+      }
+    },
+    {
+      "name": "U11 - ERROR: a future start date -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom={{tomorrow}}&key={{suffix}}"
+      }
+    },
+    {
+      "name": "U12 - ERROR: unknown role -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"role\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?role=SUPERUSER"
+      }
+    },
+    {
+      "name": "U13 - ERROR: range with start after end -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"Creation date range\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom={{tomorrow}}&createdTo={{today}}"
+      }
+    },
+    {
+      "name": "U14 - ERROR: invalid date -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"createdFrom\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?createdFrom=abc"
+      }
+    },
+    {
+      "name": "U15 - ERROR: key longer than 100 characters -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Validation failed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "U16 - Pagination, page 1 (size 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"user A first, two pages\", () => { pm.expect(j.data.content[0].id).to.eql(Number(pm.collectionVariables.get(\"userAId\"))); pm.expect(j.data.totalPages).to.eql(2); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?key={{suffix}}&page=1&size=1"
+      }
+    },
+    {
+      "name": "U17 - Pagination, page 2 (size 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"user B on the last page\", () => { pm.expect(j.data.content[0].id).to.eql(Number(pm.collectionVariables.get(\"userBId\"))); pm.expect(j.data.last).to.eql(true); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users?key={{suffix}}&page=2&size=1"
+      }
+    },
+    {
+      "name": "U18 - ERROR: page=0 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Page number must be 1 or greater\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?page=0"
+      }
+    },
+    {
+      "name": "U19 - ERROR: size=100 -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"Page size must be between 1 and 50\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users?size=100"
+      }
+    },
+    {
+      "name": "U20 - Get a user by id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"the right user\", () => { pm.expect(j.data.id).to.eql(Number(pm.collectionVariables.get(\"userAId\"))); pm.expect(j.data.username).to.eql(pm.collectionVariables.get(\"userA\")); pm.expect(j.data.roles).to.eql([\"USER\"]); pm.expect(j.data.age).to.eql(30); });",
+              "pm.test(\"the password is never returned\", () => pm.expect(j.data).to.not.have.property(\"password\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users/{{userAId}}"
+      }
+    },
+    {
+      "name": "U21 - ERROR: unknown user id -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"User not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users/99999999"
+      }
+    },
+    {
+      "name": "U22 - ERROR: unknown user id (Arabic) -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.include(\"لم يتم العثور على مستخدم\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "ar"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users/99999999"
+      }
+    },
+    {
+      "name": "U23 - ERROR: user id is not a number -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users/abc"
+      }
+    },
+    {
+      "name": "U24 - ERROR: USER cannot list users -> 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"You do not have permission to access this resource\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{tokenA}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "U25 - ERROR: USER cannot read a user -> 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users/{{userAId}}",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{tokenA}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "U26 - ERROR: no token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/users",
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "D01 - Dashboard: structure and ordering",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "pm.test(\"totals\", () => { const t = j.data.totals; [\"categories\", \"products\", \"chefs\", \"users\", \"orders\"].forEach(k => pm.expect(t[k]).to.be.a(\"number\")); pm.expect(t.users).to.be.at.least(3); });",
+              "pm.test(\"at most 5 recent items, newest first\", () => { [\"recentOrders\", \"recentProducts\", \"recentCategories\"].forEach(k => { const list = j.data[k]; pm.expect(list.length).to.be.at.most(5); const ids = list.map(x => x.id); pm.expect(ids).to.eql([...ids].sort((a, b) => b - a)); }); });",
+              "pm.test(\"recent orders carry the owner and the total\", () => j.data.recentOrders.forEach(o => { pm.expect(o.code).to.match(/^ORD-/); pm.expect(o.username).to.be.a(\"string\"); pm.expect(o.totalPrice).to.be.a(\"number\"); }));",
+              "pm.collectionVariables.set(\"before\", JSON.stringify(j.data.totals));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "D02 - Setup: create a category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"catId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AdmDash Cat {{suffix}}\", \"logo\": \"fa fa-utensils\", \"flag\": \"Special\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "D03 - Setup: create a product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set(\"prodId\", j.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"AdmDash Product {{suffix}}\", \"description\": \"Sample\", \"price\": 4.5, \"categoryId\": {{catId}} }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "D04 - Dashboard reflects the new category and product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "const before = JSON.parse(pm.collectionVariables.get(\"before\"));",
+              "pm.test(\"totals grew by one\", () => { pm.expect(j.data.totals.categories).to.eql(before.categories + 1); pm.expect(j.data.totals.products).to.eql(before.products + 1); });",
+              "pm.test(\"the newest category is first\", () => { const c = j.data.recentCategories[0]; pm.expect(c.id).to.eql(Number(pm.collectionVariables.get(\"catId\"))); pm.expect(c.name).to.eql(\"AdmDash Cat \" + pm.collectionVariables.get(\"suffix\")); });",
+              "pm.test(\"the newest product is first, with its category\", () => { const p = j.data.recentProducts[0]; pm.expect(p.id).to.eql(Number(pm.collectionVariables.get(\"prodId\"))); pm.expect(p.categoryName).to.eql(\"AdmDash Cat \" + pm.collectionVariables.get(\"suffix\")); pm.expect(p.price).to.eql(4.5); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "D05 - Cleanup: delete the product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/products?id={{prodId}}"
+      }
+    },
+    {
+      "name": "D06 - Cleanup: delete the category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/categories?id={{catId}}"
+      }
+    },
+    {
+      "name": "D07 - Dashboard is back to the initial totals",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is true\", () => pm.expect(j.success).to.eql(true));",
+              "const before = JSON.parse(pm.collectionVariables.get(\"before\"));",
+              "pm.test(\"categories and products are back\", () => { pm.expect(j.data.totals.categories).to.eql(before.categories); pm.expect(j.data.totals.products).to.eql(before.products); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard"
+      }
+    },
+    {
+      "name": "D08 - ERROR: USER cannot read the dashboard -> 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));",
+              "pm.test(\"message\", () => pm.expect(j.message).to.eql(\"You do not have permission to access this resource\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Language",
+            "value": "en"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/dashboard",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{tokenA}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D09 - ERROR: no token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+              "const j = pm.response.json();",
+              "pm.test(\"success is false\", () => pm.expect(j.success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/admin/dashboard",
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "suffix",
+      "value": ""
+    },
+    {
+      "key": "adminUser",
+      "value": "adminuser"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userAId",
+      "value": ""
+    },
+    {
+      "key": "userBId",
+      "value": ""
+    },
+    {
+      "key": "userA",
+      "value": ""
+    },
+    {
+      "key": "userAUpper",
+      "value": ""
+    },
+    {
+      "key": "tokenA",
+      "value": ""
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tomorrow",
+      "value": ""
+    },
+    {
+      "key": "before",
+      "value": ""
+    },
+    {
+      "key": "catId",
+      "value": ""
+    },
+    {
+      "key": "prodId",
+      "value": ""
+    }
+  ]
+}
