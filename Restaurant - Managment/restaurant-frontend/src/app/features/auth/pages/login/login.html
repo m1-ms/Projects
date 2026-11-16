@@ -15,6 +15,7 @@
       </a>
 
       <div class="login-visual__content">
+
         <span class="login-visual__eyebrow">WELCOME BACK</span>
 
         <h1>
@@ -35,12 +36,14 @@
 
           <div class="login-floating-card">
             <span class="login-floating-card__icon">★</span>
+
             <div>
               <strong>Premium Experience</strong>
               <small>Made with passion</small>
             </div>
           </div>
         </div>
+
       </div>
 
       <div class="login-visual__footer">
@@ -71,9 +74,11 @@
 
           <!-- Username -->
           <div class="login-field">
+
             <label for="username">Username</label>
 
             <div class="login-input-wrapper">
+
               <span class="login-input-icon">♙</span>
 
               <input
@@ -85,6 +90,7 @@
                 required
                 autocomplete="username"
               />
+
             </div>
 
             @if (loginForm.submitted && !username.trim()) {
@@ -92,13 +98,16 @@
                 Please enter your username.
               </small>
             }
+
           </div>
 
           <!-- Password -->
           <div class="login-field">
+
             <label for="password">Password</label>
 
             <div class="login-input-wrapper">
+
               <span class="login-input-icon">♙</span>
 
               <input
@@ -119,19 +128,24 @@
               >
                 {{ showPassword ? 'Hide' : 'Show' }}
               </button>
+
             </div>
+
           </div>
 
           <!-- Remember Me -->
           <div class="login-options">
 
             <label class="remember-option">
+
               <input
                 type="checkbox"
                 name="rememberMe"
                 [(ngModel)]="rememberMe"
               />
+
               <span>Remember me</span>
+
             </label>
 
             <a routerLink="/forgot-password" class="forgot-link">
@@ -140,19 +154,6 @@
 
           </div>
 
-          <!-- Messages -->
-          @if (errorMessage) {
-            <div class="login-message login-message--error">
-              {{ errorMessage }}
-            </div>
-          }
-
-          @if (successMessage) {
-            <div class="login-message login-message--success">
-              {{ successMessage }}
-            </div>
-          }
-
           <!-- Submit -->
           <button
             type="submit"
@@ -160,6 +161,7 @@
             [disabled]="!loginForm.valid || isLoading"
           >
             {{ isLoading ? 'Signing In...' : 'Sign In' }}
+
             <span>{{ isLoading ? '...' : '→' }}</span>
           </button>
 

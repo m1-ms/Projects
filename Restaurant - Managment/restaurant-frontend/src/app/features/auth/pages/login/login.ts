@@ -1,10 +1,11 @@
 
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationService } from '../../../../core/services/notification';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class Login {
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
 
   username = '';
@@ -22,51 +24,82 @@ export class Login {
   showPassword = false;
   rememberMe = false;
 
-  errorMessage = '';
-  successMessage = '';
   isLoading = false;
 
+  // Toggle password visibility.
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
 
-  onSubmit(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
+  // Display a global error notification.
+  private showError(message: string): void {
+    this.notificationService.error(message);
+  }
 
-    if (!this.username.trim() || !this.password) {
-      this.errorMessage = 'Please enter your username and password.';
+  // Handle login form submission.
+  onSubmit(): void {
+    if (this.isLoading) {
       return;
     }
 
-    if (this.isLoading) {
+    // Validate required fields.
+    if (!this.username.trim() || !this.password) {
+      this.showError('Please enter your username and password.');
       return;
     }
 
     this.isLoading = true;
 
+    // Send login request to the backend.
     this.authService.login({
       username: this.username.trim(),
       password: this.password
     }).subscribe({
+
       next: (response) => {
         this.isLoading = false;
 
+        // Handle unsuccessful API responses.
         if (!response.success || !response.data) {
-          this.errorMessage = response.message || 'Login failed.';
+          this.showError(response.message || 'Login failed.');
           return;
         }
 
-        this.successMessage = response.message || 'Login successful.';
+        // AuthService automatically saves the token and user data.
+        this.notificationService.success(
+          response.message || 'Login successful.'
+        );
 
+        // Redirect the user to the restaurant home page.
         this.router.navigate(['/']);
       },
-      error: (error) => {
+
+      error: (error: HttpErrorResponse) => {
         this.isLoading = false;
 
-        this.errorMessage =
-          error.error?.message ||
-          'Unable to login. Please check your credentials and try again.';
+        const apiMessage = error.error?.message;
+        const validationErrors = error.error?.errors;
+
+        // Handle backend validation errors.
+        if (validationErrors) {
+          this.showError(
+            Object.values(validationErrors).join(' ')
+          );
+        } else if (apiMessage) {
+          this.showError(apiMessage);
+        } else if (error.status === 0) {
+          this.showError(
+            'Unable to connect to the server. Please try again.'
+          );
+        } else if (error.status === 401 || error.status === 403) {
+          this.showError(
+            'Invalid username or password.'
+          );
+        } else {
+          this.showError(
+            'Login failed. Please try again.'
+          );
+        }
       }
     });
   }
