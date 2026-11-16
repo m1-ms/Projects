@@ -192,27 +192,17 @@
             </span>
           </label>
 
-          <!-- Messages -->
-          @if (errorMessage) {
-            <div class="register-message register-message--error">
-              {{ errorMessage }}
-            </div>
-          }
-
-          @if (successMessage) {
-            <div class="register-message register-message--success">
-              {{ successMessage }}
-            </div>
-          }
-
           <!-- Submit -->
           <button
             type="submit"
             class="register-submit"
-            [disabled]="!registerForm.valid"
+            [disabled]="isSubmitting"
           >
-            Create Account
-            <span>→</span>
+            {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+
+            @if (!isSubmitting) {
+              <span>→</span>
+            }
           </button>
 
         </form>

@@ -1,0 +1,140 @@
+
+.toast-container {
+  position: fixed;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+
+  width: min(430px, calc(100% - 32px));
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  pointer-events: none;
+}
+
+.toast {
+  width: 100%;
+  min-height: 58px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  border: 1px solid transparent;
+  border-left-width: 5px;
+  border-radius: 12px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  pointer-events: auto;
+
+  animation: toast-enter 0.35s ease-out;
+
+  &__icon {
+    width: 25px;
+    height: 25px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__message {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  &__close {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.65;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &--success {
+    background: #edf8f0;
+    color: #247a3c;
+    border-color: #bce5c7;
+    border-left-color: #2e9d50;
+
+    .toast__icon {
+      background: #d5efdc;
+    }
+  }
+
+  &--error {
+    background: #fff0f0;
+    color: #c62828;
+    border-color: #ffdada;
+    border-left-color: #d32f2f;
+
+    .toast__icon {
+      background: #ffdddd;
+    }
+  }
+
+  &--warning {
+    background: #fff8e8;
+    color: #956300;
+    border-color: #f5e3b5;
+    border-left-color: #d99b16;
+
+    .toast__icon {
+      background: #ffedc2;
+    }
+  }
+
+  &--info {
+    background: #edf5ff;
+    color: #245b9e;
+    border-color: #d2e4ff;
+    border-left-color: #3478c9;
+
+    .toast__icon {
+      background: #dceaff;
+    }
+  }
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .toast-container {
+    top: 15px;
+  }
+
+  .toast {
+    padding: 12px;
+  }
+}

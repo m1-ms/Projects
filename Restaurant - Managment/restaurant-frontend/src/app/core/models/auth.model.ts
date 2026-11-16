@@ -1,3 +1,4 @@
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -5,6 +6,7 @@ export interface LoginRequest {
 
 export interface SignUpRequest {
   username: string;
+  email: string;
   password: string;
   age: number;
   phoneNumber?: string;
@@ -22,6 +24,7 @@ export interface AuthResponse {
 export interface UserResponse {
   id: number;
   username: string;
+  email: string;
   age: number;
   phoneNumber: string | null;
   address: string | null;
