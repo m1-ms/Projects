@@ -1,6 +1,9 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
 
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+
+import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification';
 import { CartService } from '../../../core/services/cart.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
 
@@ -11,6 +14,24 @@ import { FavoritesService } from '../../../core/services/favorites.service';
   styleUrl: './navbar.scss',
 })
 export class Navbar {
+  private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
+
   cartItemsCount = inject(CartService).totalItems;
   favoritesCount = inject(FavoritesService).totalFavorites;
+
+  isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  logout(): void {
+    this.authService.logout();
+
+    this.notificationService.success(
+      'You have been logged out successfully.'
+    );
+
+    this.router.navigate(['/']);
+  }
 }

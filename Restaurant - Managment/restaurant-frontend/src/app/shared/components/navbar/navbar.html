@@ -1,3 +1,4 @@
+
 <header class="navbar">
   <div class="container navbar__container">
 
@@ -28,21 +29,22 @@
         Contact
       </a>
 
-      <a routerLink="/orders" routerLinkActive="active">
-        My Orders
-      </a>
+      @if (isAuthenticated()) {
+        <a routerLink="/orders" routerLinkActive="active">
+          My Orders
+        </a>
 
-      <a routerLink="/favorites" routerLinkActive="active">
-        My Favorites
+        <a routerLink="/favorites" routerLinkActive="active">
+          My Favorites
+          <span class="navbar__favorite-count">
+            {{ favoritesCount() }}
+          </span>
+        </a>
 
-        <span class="navbar__favorite-count">
-          {{ favoritesCount() }}
-        </span>
-      </a>
-
-      <a routerLink="/profile" routerLinkActive="active">
-        My Profile
-      </a>
+        <a routerLink="/profile" routerLinkActive="active">
+          My Profile
+        </a>
+      }
 
     </nav>
 
@@ -64,9 +66,23 @@
         }
       </a>
 
-      <a routerLink="/login" class="navbar__login">
-        Login
-      </a>
+      @if (isAuthenticated()) {
+        <button
+          type="button"
+          class="navbar__login"
+          (click)="logout()"
+        >
+          Logout
+        </button>
+      } @else {
+        <a routerLink="/login" class="navbar__login">
+          Login
+        </a>
+
+        <a routerLink="/register" class="navbar__login">
+          Sign Up
+        </a>
+      }
 
     </div>
 
