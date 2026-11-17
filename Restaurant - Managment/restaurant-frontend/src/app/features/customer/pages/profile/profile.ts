@@ -1,28 +1,27 @@
-import { Component, inject } from '@angular/core';
+
+import {
+  Component,
+  OnInit,
+  inject,
+  ChangeDetectorRef
+} from '@angular/core';
+
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-interface ProfileData {
-  fullName: string;
-  email: string;
-  phone: string;
-  city: string;
-  address: string;
-}
-
-interface OrderCustomer {
-  fullName: string;
-  email: string;
-  phone: string;
-  city: string;
-  address: string;
-}
+import { AuthService } from '../../../../core/services/auth.service';
+import { UserResponse } from '../../../../core/models/auth.model';
 
 interface Order {
   id: string;
   date: string;
-  customer: OrderCustomer;
+  customer: {
+    fullName: string;
+    email: string;
+    phone: string;
+    city: string;
+    address: string;
+  };
   items: {
     id: number;
     name: string;
@@ -37,27 +36,23 @@ interface Order {
 
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DatePipe, DecimalPipe],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
-export class Profile {
-  private readonly profileStorageKey = 'storm_profile';
+export class Profile implements OnInit {
 
-  profile: ProfileData = {
-    fullName: '',
-    email: '',
-    phone: '',
-    city: '',
-    address: '',
-  };
+  private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  profile: UserResponse | null = null;
+
+  isLoading = true;
+  errorMessage = '';
 
   orders: Order[] = [];
 
-  saveMessage = '';
-  saveMessageType: 'success' | 'error' = 'success';
-
-  constructor() {
+  ngOnInit(): void {
     this.loadProfile();
     this.loadOrders();
   }
@@ -68,12 +63,15 @@ export class Profile {
 
   get pendingOrders(): number {
     return this.orders.filter(
-      (order) => order.status.toLowerCase() === 'pending',
+      order => order.status.toLowerCase() === 'pending',
     ).length;
   }
 
   get totalSpent(): number {
-    return this.orders.reduce((total, order) => total + order.total, 0);
+    return this.orders.reduce(
+      (total, order) => total + order.total,
+      0,
+    );
   }
 
   get recentOrders(): Order[] {
@@ -85,56 +83,18 @@ export class Profile {
       .slice(0, 3);
   }
 
-  saveProfile(): void {
-    this.saveMessage = '';
-
-    const fullName = this.profile.fullName.trim();
-    const email = this.profile.email.trim();
-    const phone = this.profile.phone.trim();
-
-    if (!fullName || !email || !phone) {
-      this.showMessage('Please complete your name, email, and phone number.', 'error');
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.showMessage('Please enter a valid email address.', 'error');
-      return;
-    }
-
-    if (!/^\+?[0-9\s-]{10,15}$/.test(phone)) {
-      this.showMessage('Please enter a valid phone number.', 'error');
-      return;
-    }
-
-    const updatedProfile: ProfileData = {
-      fullName,
-      email,
-      phone,
-      city: this.profile.city.trim(),
-      address: this.profile.address.trim(),
-    };
-
-    try {
-      localStorage.setItem(
-        this.profileStorageKey,
-        JSON.stringify(updatedProfile),
-      );
-
-      this.profile = updatedProfile;
-      this.showMessage('Your profile has been saved successfully.', 'success');
-    } catch {
-      this.showMessage('Unable to save your profile. Please try again.', 'error');
-    }
-  }
-
   getStatusClass(status: string): string {
     const normalizedStatus = status.toLowerCase();
 
     if (normalizedStatus === 'pending') return 'pending';
-    if (normalizedStatus === 'completed' || normalizedStatus === 'delivered') {
+
+    if (
+      normalizedStatus === 'completed' ||
+      normalizedStatus === 'delivered'
+    ) {
       return 'completed';
     }
+
     if (normalizedStatus === 'cancelled') return 'cancelled';
     if (normalizedStatus === 'processing') return 'processing';
 
@@ -142,66 +102,63 @@ export class Profile {
   }
 
   getItemsCount(order: Order): number {
-    return order.items.reduce((total, item) => total + item.quantity, 0);
+    return order.items.reduce(
+      (total, item) => total + item.quantity,
+      0,
+    );
   }
 
   private loadProfile(): void {
-    try {
-      const savedProfile = localStorage.getItem(this.profileStorageKey);
+    this.isLoading = true;
+    this.errorMessage = '';
 
-      if (savedProfile) {
-        this.profile = {
-          ...this.profile,
-          ...(JSON.parse(savedProfile) as Partial<ProfileData>),
-        };
-        return;
-      }
+    this.authService.getCurrentUser().subscribe({
+      next: response => {
+        console.log('PROFILE API RESPONSE:', response);
 
-      // Use the latest order's customer details as initial profile data.
-      const savedOrders = JSON.parse(
-        localStorage.getItem('storm_orders') || '[]',
-      ) as Order[];
+        if (response.success && response.data) {
+          this.profile = response.data;
 
-      const latestOrder = [...savedOrders].sort(
-        (a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime(),
-      )[0];
+          console.log('PROFILE DATA:', this.profile);
+        } else {
+          this.errorMessage =
+            response.message || 'Unable to load your profile.';
+        }
 
-      if (latestOrder?.customer) {
-        this.profile = {
-          fullName: latestOrder.customer.fullName || '',
-          email: latestOrder.customer.email || '',
-          phone: latestOrder.customer.phone || '',
-          city: latestOrder.customer.city || '',
-          address: latestOrder.customer.address || '',
-        };
-      }
-    } catch {
-      this.profile = {
-        fullName: '',
-        email: '',
-        phone: '',
-        city: '',
-        address: '',
-      };
-    }
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+
+      error: error => {
+        console.error('PROFILE API ERROR:', error);
+
+        this.errorMessage =
+          error.error?.message ||
+          'Unable to load your profile. Please try again.';
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   private loadOrders(): void {
     try {
+      const user = this.authService.getUser();
+
+      if (!user) {
+        this.orders = [];
+        return;
+      }
+
+      const storageKey = `storm_orders_${user.username}`;
+
       this.orders = JSON.parse(
-        localStorage.getItem('storm_orders') || '[]',
+        localStorage.getItem(storageKey) || '[]',
       ) as Order[];
+
     } catch {
       this.orders = [];
     }
-  }
-
-  private showMessage(
-    message: string,
-    type: 'success' | 'error',
-  ): void {
-    this.saveMessage = message;
-    this.saveMessageType = type;
   }
 }

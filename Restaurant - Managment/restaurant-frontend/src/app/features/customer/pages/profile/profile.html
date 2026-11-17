@@ -1,17 +1,13 @@
+
 <section class="profile-page">
 
-  <!-- Hero -->
   <div class="profile-hero">
     <div class="container">
       <span class="profile-hero__eyebrow">YOUR ACCOUNT</span>
 
-      <h1>
-        My <span>Profile</span>
-      </h1>
+      <h1>My <span>Profile</span></h1>
 
-      <p>
-        Manage your personal information and keep track of your orders.
-      </p>
+      <p>View your personal information and keep track of your orders.</p>
 
       <div class="profile-breadcrumb">
         <a routerLink="/">Home</a>
@@ -23,14 +19,12 @@
 
   <div class="container profile-container">
 
-    <!-- Account Summary -->
     <div class="profile-stats">
 
       <article class="stat-card">
         <div class="stat-card__icon">
           <i class="ti ti-shopping-bag"></i>
         </div>
-
         <div>
           <span>Total Orders</span>
           <strong>{{ totalOrders }}</strong>
@@ -41,7 +35,6 @@
         <div class="stat-card__icon">
           <i class="ti ti-clock"></i>
         </div>
-
         <div>
           <span>Pending Orders</span>
           <strong>{{ pendingOrders }}</strong>
@@ -52,7 +45,6 @@
         <div class="stat-card__icon">
           <i class="ti ti-wallet"></i>
         </div>
-
         <div>
           <span>Total Spent</span>
           <strong>{{ totalSpent | number:'1.2-2' }} EGP</strong>
@@ -61,143 +53,116 @@
 
     </div>
 
-    <!-- Profile Content -->
     <div class="profile-content">
 
-      <!-- Personal Information -->
       <section class="profile-card">
 
         <div class="profile-card__header">
           <div>
-            <span class="section-eyebrow">ACCOUNT SETTINGS</span>
+            <span class="section-eyebrow">ACCOUNT INFORMATION</span>
             <h2>Personal Information</h2>
-            <p>Update your personal details below.</p>
+            <p>Your registered account details.</p>
           </div>
 
           <div class="profile-card__icon">
-            <i class="ti ti-user-edit"></i>
+            <i class="ti ti-user"></i>
           </div>
         </div>
 
-        @if (saveMessage) {
-          <div
-            class="profile-message"
-            [class.profile-message--success]="saveMessageType === 'success'"
-            [class.profile-message--error]="saveMessageType === 'error'"
-          >
-            <i
-              class="ti"
-              [class.ti-circle-check]="saveMessageType === 'success'"
-              [class.ti-alert-circle]="saveMessageType === 'error'"
-            ></i>
-
-            {{ saveMessage }}
+        @if (isLoading) {
+          <div class="profile-message">
+            <i class="ti ti-loader"></i>
+            Loading your account information...
           </div>
+        } @else if (errorMessage) {
+          <div class="profile-message profile-message--error">
+            <i class="ti ti-alert-circle"></i>
+            {{ errorMessage }}
+          </div>
+        } @else if (profile) {
+
+          <div class="profile-form">
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label>Username</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-user"></i>
+                  <input type="text" [value]="profile.username" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-mail"></i>
+                  <input type="email" [value]="profile.email" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Age</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-calendar"></i>
+                  <input type="text" [value]="profile.age" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Phone Number</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-phone"></i>
+                  <input
+                    type="tel"
+                    [value]="profile.phoneNumber || 'Not provided'"
+                    readonly
+                  >
+                </div>
+              </div>
+
+              <div class="form-group form-group--full">
+                <label>Address</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-home"></i>
+                  <input
+                    type="text"
+                    [value]="profile.address || 'Not provided'"
+                    readonly
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Account Roles</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-shield-check"></i>
+                  <input
+                    type="text"
+                    [value]="profile.roles.join(', ')"
+                    readonly
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Account Created</label>
+                <div class="input-wrapper">
+                  <i class="ti ti-calendar-check"></i>
+                  <input
+                    type="text"
+                    [value]="(profile.createdDate | date:'mediumDate') || 'Not available'"
+                    readonly
+                  >
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         }
-
-        <form class="profile-form" (ngSubmit)="saveProfile()">
-
-          <div class="form-grid">
-
-            <div class="form-group">
-              <label for="fullName">Full Name *</label>
-
-              <div class="input-wrapper">
-                <i class="ti ti-user"></i>
-
-                <input
-                  id="fullName"
-                  type="text"
-                  name="fullName"
-                  [(ngModel)]="profile.fullName"
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email Address *</label>
-
-              <div class="input-wrapper">
-                <i class="ti ti-mail"></i>
-
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  [(ngModel)]="profile.email"
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone Number *</label>
-
-              <div class="input-wrapper">
-                <i class="ti ti-phone"></i>
-
-                <input
-                  id="phone"
-                  type="tel"
-                  name="phone"
-                  [(ngModel)]="profile.phone"
-                  placeholder="Enter your phone number"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="city">City</label>
-
-              <div class="input-wrapper">
-                <i class="ti ti-map-pin"></i>
-
-                <input
-                  id="city"
-                  type="text"
-                  name="city"
-                  [(ngModel)]="profile.city"
-                  placeholder="Enter your city"
-                />
-              </div>
-            </div>
-
-            <div class="form-group form-group--full">
-              <label for="address">Delivery Address</label>
-
-              <div class="input-wrapper">
-                <i class="ti ti-home"></i>
-
-                <input
-                  id="address"
-                  type="text"
-                  name="address"
-                  [(ngModel)]="profile.address"
-                  placeholder="Enter your full address"
-                />
-              </div>
-            </div>
-
-          </div>
-
-          <div class="profile-form__footer">
-            <p>* Required fields</p>
-
-            <button type="submit" class="save-button">
-              <i class="ti ti-device-floppy"></i>
-              Save Changes
-            </button>
-          </div>
-
-        </form>
 
       </section>
 
-      <!-- Account Shortcuts -->
       <aside class="profile-sidebar">
 
         <div class="profile-card account-card">
@@ -206,9 +171,9 @@
             <i class="ti ti-user"></i>
           </div>
 
-          <h2>{{ profile.fullName || 'Welcome to Storm' }}</h2>
+          <h2>{{ profile?.username || 'Welcome to Storm' }}</h2>
 
-          <p>{{ profile.email || 'Your account information' }}</p>
+          <p>{{ profile?.email || 'Your account information' }}</p>
 
           <div class="account-divider"></div>
 
@@ -260,7 +225,6 @@
 
     </div>
 
-    <!-- Recent Orders -->
     <section class="recent-orders">
 
       <div class="recent-orders__header">
@@ -285,7 +249,6 @@
             <article class="recent-order-card">
 
               <div class="recent-order-card__main">
-
                 <div class="recent-order-card__icon">
                   <i class="ti ti-receipt"></i>
                 </div>
@@ -295,7 +258,6 @@
                   <span>{{ order.date | date:'mediumDate' }}</span>
                   <small>{{ getItemsCount(order) }} items</small>
                 </div>
-
               </div>
 
               <div class="recent-order-card__status">
