@@ -1,4 +1,13 @@
-import { Injectable, computed, signal } from '@angular/core';
+
+import {
+  Injectable,
+  computed,
+  effect,
+  inject,
+  signal
+} from '@angular/core';
+
+import { AuthService } from './auth.service';
 
 export interface FavoriteProduct {
   id: number;
@@ -15,15 +24,23 @@ export interface FavoriteProduct {
   providedIn: 'root',
 })
 export class FavoritesService {
-  private readonly storageKey = 'storm_favorites';
+  private readonly authService = inject(AuthService);
 
-  private favoritesSignal = signal<FavoriteProduct[]>(
-    this.loadFavorites()
+  private readonly favoritesSignal = signal<FavoriteProduct[]>([]);
+
+  readonly favorites = this.favoritesSignal.asReadonly();
+
+  readonly totalFavorites = computed(
+    () => this.favoritesSignal().length
   );
 
-  favorites = this.favoritesSignal.asReadonly();
+  constructor() {
+    effect(() => {
+      const username = this.authService.currentUser()?.username ?? null;
 
-  totalFavorites = computed(() => this.favoritesSignal().length);
+      this.loadFavorites(username);
+    });
+  }
 
   isFavorite(productId: number): boolean {
     return this.favoritesSignal().some(
@@ -32,44 +49,65 @@ export class FavoritesService {
   }
 
   toggleFavorite(product: FavoriteProduct): void {
+    if (!this.authService.getUser()) return;
+
     if (this.isFavorite(product.id)) {
       this.removeFavorite(product.id);
       return;
     }
 
-    this.favoritesSignal.update(items => [...items, product]);
-    this.saveFavorites();
+    this.updateFavorites([
+      ...this.favoritesSignal(),
+      product
+    ]);
   }
 
   removeFavorite(productId: number): void {
-    this.favoritesSignal.update(
-      items => items.filter(product => product.id !== productId)
+    this.updateFavorites(
+      this.favoritesSignal().filter(
+        product => product.id !== productId
+      )
     );
-
-    this.saveFavorites();
   }
 
   clearFavorites(): void {
-    this.favoritesSignal.set([]);
-    this.saveFavorites();
+    this.updateFavorites([]);
   }
 
-  private saveFavorites(): void {
-    localStorage.setItem(
-      this.storageKey,
-      JSON.stringify(this.favoritesSignal())
-    );
+  private updateFavorites(products: FavoriteProduct[]): void {
+    const user = this.authService.getUser();
+
+    if (!user) {
+      this.favoritesSignal.set([]);
+      return;
+    }
+
+    const key = `storm_favorites_${user.username}`;
+
+    this.favoritesSignal.set(products);
+
+    localStorage.setItem(key, JSON.stringify(products));
   }
 
-  private loadFavorites(): FavoriteProduct[] {
+  private loadFavorites(username: string | null): void {
+    if (!username) {
+      this.favoritesSignal.set([]);
+      return;
+    }
+
     try {
-      const saved = localStorage.getItem(this.storageKey);
+      const key = `storm_favorites_${username}`;
+      const saved = localStorage.getItem(key);
 
-      return saved
+      const products = saved
         ? JSON.parse(saved) as FavoriteProduct[]
         : [];
+
+      this.favoritesSignal.set(
+        Array.isArray(products) ? products : []
+      );
     } catch {
-      return [];
+      this.favoritesSignal.set([]);
     }
   }
 }
