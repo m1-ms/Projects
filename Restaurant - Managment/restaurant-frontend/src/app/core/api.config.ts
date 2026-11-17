@@ -2,6 +2,7 @@ export const API_CONFIG = {
   baseUrl: 'http://localhost:8080/api',
   endpoints: {
     login: '/auth/login',
-    signup: '/auth/signup'
+    signup: '/auth/signup',
+    products: '/products'
   }
 } as const;

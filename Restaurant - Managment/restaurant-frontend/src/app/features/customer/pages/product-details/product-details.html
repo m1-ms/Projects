@@ -1,9 +1,26 @@
-@if (product) {
-  <section class="product-details-page">
 
+@if (loading) {
+  <section class="product-details-page">
+    <div class="container">
+      <div class="section-heading">
+        <h2>Loading Product...</h2>
+        <p>Please wait while we load the product details.</p>
+      </div>
+    </div>
+  </section>
+} @else if (errorMessage) {
+  <section class="product-details-page">
+    <div class="container">
+      <div class="section-heading">
+        <h2>{{ errorMessage }}</h2>
+        <a routerLink="/menu">Back to Menu</a>
+      </div>
+    </div>
+  </section>
+} @else if (product) {
+  <section class="product-details-page">
     <div class="container">
 
-      <!-- Breadcrumb -->
       <nav class="breadcrumb">
         <a routerLink="/">Home</a>
         <span>/</span>
@@ -12,12 +29,9 @@
         <span class="current">{{ product.name }}</span>
       </nav>
 
-      <!-- Product Details -->
       <div class="product-details-grid">
 
-        <!-- Product Image -->
         <div class="product-image-wrapper">
-
           <div class="product-main-image">
             <img
               [src]="product.image"
@@ -37,10 +51,8 @@
             <span class="caption-icon">✦</span>
             <span>Freshly prepared with love</span>
           </div>
-
         </div>
 
-        <!-- Product Information -->
         <div class="product-information">
 
           <span class="product-category">
@@ -48,14 +60,6 @@
           </span>
 
           <h1>{{ product.name }}</h1>
-
-          <div class="product-rating">
-            <span class="stars">★★★★★</span>
-            <strong>{{ product.rating }}</strong>
-            <span class="reviews">
-              ({{ product.reviews }} Reviews)
-            </span>
-          </div>
 
           <p class="product-description">
             {{ product.description }}
@@ -67,10 +71,8 @@
 
           <div class="product-divider"></div>
 
-          <!-- Size Selection -->
           <div class="option-section">
-
-            <h3>Choose Your Size</h3>
+            <h3>Product Size</h3>
 
             <div class="size-options">
               @for (size of product.sizes; track size.name) {
@@ -81,25 +83,15 @@
                   (click)="selectSize(size.name)"
                 >
                   <span>{{ size.name }}</span>
-
-                  @if (size.extraPrice > 0) {
-                    <small>
-                      +${{ size.extraPrice.toFixed(2) }}
-                    </small>
-                  }
                 </button>
               }
             </div>
-
           </div>
 
-          <!-- Quantity -->
           <div class="quantity-section">
-
             <h3>Quantity</h3>
 
             <div class="quantity-control">
-
               <button
                 type="button"
                 (click)="decreaseQuantity()"
@@ -119,18 +111,14 @@
               >
                 +
               </button>
-
             </div>
-
           </div>
 
-          <!-- Total -->
           <div class="total-price">
             <span>Total Price</span>
             <strong>${{ totalPrice.toFixed(2) }}</strong>
           </div>
 
-          <!-- Add To Cart -->
           <button
             type="button"
             class="add-to-cart-btn"
@@ -159,35 +147,8 @@
           </div>
 
         </div>
-
       </div>
 
-      <!-- Ingredients -->
-      <section class="ingredients-section">
-
-        <div class="section-heading">
-          <span>WHAT'S INSIDE</span>
-          <h2>Made With The Best Ingredients</h2>
-          <p>
-            Every ingredient is carefully selected to deliver
-            an exceptional taste experience.
-          </p>
-        </div>
-
-        <div class="ingredients-grid">
-
-          @for (ingredient of product.ingredients; track ingredient) {
-            <div class="ingredient-card">
-              <span class="ingredient-icon">✦</span>
-              <span>{{ ingredient }}</span>
-            </div>
-          }
-
-        </div>
-
-      </section>
-
-      <!-- Related Products -->
       @if (relatedProducts.length > 0) {
         <section class="related-products-section">
 
@@ -203,13 +164,11 @@
           </div>
 
           <div class="related-products-grid">
-
             @for (item of relatedProducts; track item.id) {
               <a
                 class="related-product-card"
                 [routerLink]="['/product-details', item.id]"
               >
-
                 <div class="related-image">
                   <img
                     [src]="item.image"
@@ -229,16 +188,13 @@
                     <span>View Details →</span>
                   </div>
                 </div>
-
               </a>
             }
-
           </div>
 
         </section>
       }
 
     </div>
-
   </section>
 }

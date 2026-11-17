@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import {
@@ -14,11 +15,15 @@ import { CartService } from '../../../../core/services/cart.service';
   templateUrl: './favorites.html',
   styleUrl: './favorites.scss',
 })
-export class Favorites {
+export class Favorites implements OnInit {
   private favoritesService = inject(FavoritesService);
   private cartService = inject(CartService);
 
   favorites = this.favoritesService.favorites;
+
+  ngOnInit(): void {
+    this.favoritesService.syncFavoritesWithBackend();
+  }
 
   removeFavorite(productId: number): void {
     this.favoritesService.removeFavorite(productId);

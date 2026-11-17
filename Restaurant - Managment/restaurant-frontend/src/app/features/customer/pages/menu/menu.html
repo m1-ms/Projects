@@ -1,3 +1,4 @@
+
 <section class="menu-page">
   <div class="menu-hero">
     <div class="menu-hero__content">
@@ -28,32 +29,50 @@
       </a>
     </div>
 
-    <div class="menu-categories">
-      @for (category of categories; track category) {
-        <button
-          type="button"
-          class="category-btn"
-          [class.active]="selectedCategory === category"
-          (click)="selectCategory(category)"
-        >
-          {{ category }}
-        </button>
-      }
-    </div>
+    @if (!loading && !errorMessage) {
+      <div class="menu-categories">
+        @for (category of categories; track category) {
+          <button
+            type="button"
+            class="category-btn"
+            [class.active]="selectedCategory === category"
+            (click)="selectCategory(category)"
+          >
+            {{ category }}
+          </button>
+        }
+      </div>
+    }
 
     <div class="menu-results">
       <div class="menu-results__heading">
         <div>
           <span class="section-eyebrow">OUR SELECTION</span>
-          <h2>{{ selectedCategory === 'All' ? 'All Dishes' : selectedCategory }}</h2>
+          <h2>
+            {{ selectedCategory === 'All' ? 'All Dishes' : selectedCategory }}
+          </h2>
         </div>
 
-        <span class="menu-results__count">
-          {{ filteredProducts.length }} dishes
-        </span>
+        @if (!loading && !errorMessage) {
+          <span class="menu-results__count">
+            {{ filteredProducts.length }} dishes
+          </span>
+        }
       </div>
 
-      @if (filteredProducts.length > 0) {
+      @if (loading) {
+        <div class="menu-empty">
+          <h3>Loading products...</h3>
+          <p>Please wait while we load our menu.</p>
+        </div>
+      } @else if (errorMessage) {
+        <div class="menu-empty">
+          <h3>{{ errorMessage }}</h3>
+          <button type="button" (click)="loadProducts()">
+            Try Again
+          </button>
+        </div>
+      } @else if (filteredProducts.length > 0) {
         <div class="menu-grid">
           @for (product of filteredProducts; track product.id) {
             <article class="menu-card">
@@ -80,7 +99,9 @@
               <div class="menu-card__content">
                 <div class="menu-card__meta">
                   <span>{{ product.category }}</span>
-                  <span>★ {{ product.rating }}</span>
+                  @if (product.rating > 0) {
+                    <span>★ {{ product.rating }}</span>
+                  }
                 </div>
 
                 <a
@@ -140,6 +161,7 @@
           <span>⌕</span>
           <h3>No dishes found</h3>
           <p>Try another search term or choose a different category.</p>
+
           <button
             type="button"
             (click)="onSearch(''); selectCategory('All')"
