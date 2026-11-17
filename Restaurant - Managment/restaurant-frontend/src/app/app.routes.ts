@@ -1,16 +1,14 @@
 
 import { Routes } from '@angular/router';
 
-// Layouts
 import { CustomerLayout } from './layouts/customer-layout/customer-layout';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
-
-// Customer Home
 import { Home } from './features/customer/pages/home/home';
 
-export const routes: Routes = [
+import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
-  // Customer Website
+export const routes: Routes = [
   {
     path: '',
     component: CustomerLayout,
@@ -39,12 +37,14 @@ export const routes: Routes = [
       },
       {
         path: 'checkout',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/customer/pages/checkout/checkout')
             .then(m => m.Checkout),
       },
       {
         path: 'order-confirmation/:id',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/customer/pages/order-confirmation/order-confirmation')
             .then(m => m.OrderConfirmation),
@@ -57,12 +57,14 @@ export const routes: Routes = [
       },
       {
         path: 'orders',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/customer/pages/orders/orders')
             .then(m => m.Orders),
       },
       {
         path: 'profile',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/customer/pages/profile/profile')
             .then(m => m.Profile),
@@ -75,14 +77,13 @@ export const routes: Routes = [
       },
       {
         path: 'favorites',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/customer/pages/favorites/favorites')
             .then(m => m.Favorites),
       },
     ],
   },
-
-  // Authentication
   {
     path: 'login',
     loadComponent: () =>
@@ -95,11 +96,10 @@ export const routes: Routes = [
       import('./features/auth/pages/register/register')
         .then(m => m.Register),
   },
-
-  // Admin Dashboard
   {
     path: 'admin',
     component: AdminLayout,
+    canActivate: [adminGuard],
     children: [
       {
         path: '',
@@ -150,11 +150,8 @@ export const routes: Routes = [
       },
     ],
   },
-
-  // Not Found
   {
     path: '**',
     redirectTo: '',
   },
-
 ];

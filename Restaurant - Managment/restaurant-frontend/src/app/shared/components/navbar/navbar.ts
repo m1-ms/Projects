@@ -26,12 +26,20 @@ export class Navbar {
   }
 
   logout(): void {
-    this.authService.logout();
+    this.authService.logout().subscribe({
+      next: response => {
+        this.notificationService.success(
+          response.message || 'You have been logged out successfully.'
+        );
 
-    this.notificationService.success(
-      'You have been logged out successfully.'
-    );
+        void this.router.navigate(['/']);
+      },
 
-    this.router.navigate(['/']);
+      error: () => {
+        this.notificationService.error(
+          'Unable to log out. Please try again.'
+        );
+      }
+    });
   }
 }

@@ -14,7 +14,6 @@ export interface SignUpRequest {
 }
 
 export interface AuthResponse {
-  token: string;
   tokenType: string;
   expiresInSeconds: number;
   username: string;

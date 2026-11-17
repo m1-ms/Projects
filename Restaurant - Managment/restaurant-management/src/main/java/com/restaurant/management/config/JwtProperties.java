@@ -12,5 +12,12 @@ import org.springframework.stereotype.Component;
 public class JwtProperties {
 
     private String secret;
+
     private long expirationMinutes = 1440;
+
+    private String cookieName = "storm_auth_token";
+
+    private boolean cookieSecure = false;
+
+    private String cookieSameSite = "Lax";
 }

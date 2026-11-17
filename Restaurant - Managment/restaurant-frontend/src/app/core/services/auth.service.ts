@@ -1,9 +1,19 @@
 
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+
+import {
+  Observable,
+  catchError,
+  finalize,
+  map,
+  of,
+  switchMap,
+  tap
+} from 'rxjs';
 
 import { API_CONFIG } from '../api.config';
+
 import {
   ApiResponse,
   AuthResponse,
@@ -12,46 +22,96 @@ import {
   UserResponse
 } from '../models/auth.model';
 
+type AuthUser = Pick<UserResponse, 'username' | 'roles'> | UserResponse;
+
+interface CsrfTokenResponse {
+  token: string;
+  headerName: string;
+  parameterName: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+
   private readonly http = inject(HttpClient);
 
-  private readonly tokenKey = 'storm_auth_token';
-  private readonly userKey = 'storm_auth_user';
-
-  private readonly currentUserSignal = signal<AuthResponse | null>(
-    this.readStoredUser()
-  );
+  private readonly currentUserSignal = signal<AuthUser | null>(null);
+  private readonly sessionReadySignal = signal(false);
 
   readonly currentUser = this.currentUserSignal.asReadonly();
+  readonly sessionReady = this.sessionReadySignal.asReadonly();
+
+  constructor() {
+    this.restoreSession();
+  }
 
   login(request: LoginRequest): Observable<ApiResponse<AuthResponse>> {
-    return this.http
-      .post<ApiResponse<AuthResponse>>(
-        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.login}`,
-        request
-      )
-      .pipe(
-        tap(response => {
-          if (response.success && response.data) {
-            this.saveAuthData(response.data);
-          }
-        })
-      );
+    return this.getCsrfToken().pipe(
+      switchMap(() =>
+        this.http.post<ApiResponse<AuthResponse>>(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.login}`,
+          request
+        )
+      ),
+
+      tap(response => {
+        if (response.success && response.data) {
+          this.currentUserSignal.set({
+            username: response.data.username,
+            roles: response.data.roles
+          });
+        }
+      }),
+
+      switchMap(response => {
+        if (!response.success || !response.data) {
+          return of(response);
+        }
+
+        return this.getCsrfToken().pipe(
+          catchError(() => of(null)),
+          map(() => response)
+        );
+      })
+    );
   }
 
   signup(request: SignUpRequest): Observable<ApiResponse<UserResponse>> {
-    return this.http.post<ApiResponse<UserResponse>>(
-      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.signup}`,
-      request
+    return this.getCsrfToken().pipe(
+      switchMap(() =>
+        this.http.post<ApiResponse<UserResponse>>(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.signup}`,
+          request
+        )
+      )
     );
   }
 
   getCurrentUser(): Observable<ApiResponse<UserResponse>> {
     return this.http.get<ApiResponse<UserResponse>>(
       `${API_CONFIG.baseUrl}/users/me`
+    ).pipe(
+      tap(response => {
+        if (response.success && response.data) {
+          this.currentUserSignal.set(response.data);
+        }
+      })
+    );
+  }
+
+  logout(): Observable<ApiResponse<void>> {
+    return this.getCsrfToken().pipe(
+      switchMap(() =>
+        this.http.post<ApiResponse<void>>(
+          `${API_CONFIG.baseUrl}/auth/logout`,
+          {}
+        )
+      ),
+      tap(() => {
+        this.currentUserSignal.set(null);
+      })
     );
   }
 
@@ -59,39 +119,37 @@ export class AuthService {
     return this.isLoggedIn();
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+  isLoggedIn(): boolean {
+    return this.currentUserSignal() !== null;
   }
 
-  getUser(): AuthResponse | null {
+  getUser(): AuthUser | null {
     return this.currentUserSignal();
   }
 
-  isLoggedIn(): boolean {
-    return !!this.getToken();
+  private getCsrfToken(): Observable<CsrfTokenResponse> {
+    return this.http.get<CsrfTokenResponse>(
+      `${API_CONFIG.baseUrl}/auth/csrf`
+    );
   }
 
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
+  private restoreSession(): void {
+    this.getCsrfToken().pipe(
+      switchMap(() => this.getCurrentUser()),
 
-    this.currentUserSignal.set(null);
-  }
+      map(response =>
+        response.success && response.data
+          ? response.data
+          : null
+      ),
 
-  private saveAuthData(auth: AuthResponse): void {
-    localStorage.setItem(this.tokenKey, auth.token);
-    localStorage.setItem(this.userKey, JSON.stringify(auth));
+      catchError(() => of(null)),
 
-    this.currentUserSignal.set(auth);
-  }
-
-  private readStoredUser(): AuthResponse | null {
-    try {
-      const user = localStorage.getItem(this.userKey);
-
-      return user ? JSON.parse(user) as AuthResponse : null;
-    } catch {
-      return null;
-    }
+      finalize(() => {
+        this.sessionReadySignal.set(true);
+      })
+    ).subscribe(user => {
+      this.currentUserSignal.set(user);
+    });
   }
 }

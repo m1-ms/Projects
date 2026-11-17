@@ -1,7 +1,10 @@
+
 package com.restaurant.management.security;
 
+import com.restaurant.management.config.JwtProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
@@ -23,34 +26,82 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final JwtProperties jwtProperties;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            JwtProperties jwtProperties
+    ) {
         this.jwtService = jwtService;
+        this.jwtProperties = jwtProperties;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header != null && header.startsWith(BEARER_PREFIX)) {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        String token = extractToken(request);
+
+        if (token != null && !token.isBlank()) {
             try {
-                Jwt jwt = jwtService.parse(header.substring(BEARER_PREFIX.length()).trim());
-                List<String> roles = jwt.getClaimAsStringList(JwtService.ROLES_CLAIM);
-                List<SimpleGrantedAuthority> authorities = (roles == null ? List.<String>of() : roles).stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                        .toList();
+                Jwt jwt = jwtService.parse(token);
+
+                List<String> roles =
+                        jwt.getClaimAsStringList(JwtService.ROLES_CLAIM);
+
+                List<SimpleGrantedAuthority> authorities =
+                        (roles == null ? List.<String>of() : roles)
+                                .stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                                .toList();
 
                 UsernamePasswordAuthenticationToken authentication =
-                        UsernamePasswordAuthenticationToken.authenticated(jwt.getSubject(), null, authorities);
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        UsernamePasswordAuthenticationToken.authenticated(
+                                jwt.getSubject(),
+                                null,
+                                authorities
+                        );
 
-                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+
+                SecurityContext context =
+                        SecurityContextHolder.createEmptyContext();
+
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);
+
             } catch (JwtException ex) {
                 request.setAttribute(INVALID_TOKEN_ATTRIBUTE, Boolean.TRUE);
             }
         }
+
         filterChain.doFilter(request, response);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (jwtProperties.getCookieName().equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        // Temporary compatibility with the old Bearer-token flow.
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (header != null && header.startsWith(BEARER_PREFIX)) {
+            return header.substring(BEARER_PREFIX.length()).trim();
+        }
+
+        return null;
     }
 }
