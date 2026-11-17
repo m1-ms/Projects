@@ -1,9 +1,10 @@
 
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 
 import { CartItem } from '../../../../core/services/cart.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface CustomerDetails {
   fullName: string;
@@ -28,12 +29,13 @@ interface Order {
 
 @Component({
   selector: 'app-order-confirmation',
-    imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe],
   templateUrl: './order-confirmation.html',
   styleUrl: './order-confirmation.scss',
 })
 export class OrderConfirmation {
   private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
   order: Order | null = null;
 
@@ -43,17 +45,22 @@ export class OrderConfirmation {
 
   private loadOrder(): void {
     const orderId = this.route.snapshot.paramMap.get('id');
+    const user = this.authService.getUser();
 
-    if (!orderId) {
+    if (!orderId || !user) {
+      this.order = null;
       return;
     }
 
     try {
+      const storageKey = `storm_orders_${user.username}`;
+
       const savedOrders = JSON.parse(
-        localStorage.getItem('storm_orders') || '[]',
+        localStorage.getItem(storageKey) || '[]',
       ) as Order[];
 
-      this.order = savedOrders.find((order) => order.id === orderId) ?? null;
+      this.order =
+        savedOrders.find((order) => order.id === orderId) ?? null;
     } catch {
       this.order = null;
     }

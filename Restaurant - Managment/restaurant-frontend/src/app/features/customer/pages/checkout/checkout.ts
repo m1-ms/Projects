@@ -8,6 +8,8 @@ import {
   CartItem,
 } from '../../../../core/services/cart.service';
 
+import { AuthService } from '../../../../core/services/auth.service';
+
 interface CustomerDetails {
   fullName: string;
   email: string;
@@ -36,8 +38,9 @@ interface Order {
   styleUrl: './checkout.scss',
 })
 export class Checkout {
-  private cartService = inject(CartService);
-  private router = inject(Router);
+  private readonly cartService = inject(CartService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   deliveryFee = 3.99;
   paymentMethod = 'Cash on Delivery';
@@ -71,8 +74,23 @@ export class Checkout {
     return this.subtotal + this.deliveryFee;
   }
 
+  private getOrdersStorageKey(): string | null {
+    const user = this.authService.getUser();
+
+    if (!user) {
+      return null;
+    }
+
+    return `storm_orders_${user.username}`;
+  }
+
   placeOrder(): void {
     this.errorMessage = '';
+
+    if (!this.authService.isLoggedIn()) {
+      this.errorMessage = 'Please login before placing an order.';
+      return;
+    }
 
     if (this.cartItems.length === 0) {
       this.errorMessage = 'Your cart is empty.';
@@ -100,11 +118,18 @@ export class Checkout {
       return;
     }
 
+    const storageKey = this.getOrdersStorageKey();
+
+    if (!storageKey) {
+      this.errorMessage = 'Unable to identify your account. Please login again.';
+      return;
+    }
+
     const order: Order = {
       id: `STR-${Date.now().toString().slice(-8)}`,
       date: new Date().toISOString(),
       customer: { ...this.customer },
-      items: this.cartItems.map((item) => ({ ...item })),
+      items: this.cartItems.map(item => ({ ...item })),
       subtotal: this.subtotal,
       deliveryFee: this.deliveryFee,
       total: this.total,
@@ -114,12 +139,12 @@ export class Checkout {
 
     try {
       const savedOrders = JSON.parse(
-        localStorage.getItem('storm_orders') || '[]',
+        localStorage.getItem(storageKey) || '[]',
       ) as Order[];
 
       savedOrders.push(order);
 
-      localStorage.setItem('storm_orders', JSON.stringify(savedOrders));
+      localStorage.setItem(storageKey, JSON.stringify(savedOrders));
 
       this.orderNumber = order.id;
       this.cartService.clearCart();

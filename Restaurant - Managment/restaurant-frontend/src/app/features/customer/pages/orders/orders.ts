@@ -1,9 +1,10 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 
 import { CartItem } from '../../../../core/services/cart.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface CustomerDetails {
   fullName: string;
@@ -33,8 +34,9 @@ interface Order {
   styleUrl: './orders.scss',
 })
 export class Orders implements OnInit {
-  orders: Order[] = [];
+  private readonly authService = inject(AuthService);
 
+  orders: Order[] = [];
   loading = true;
   errorMessage = '';
 
@@ -47,8 +49,17 @@ export class Orders implements OnInit {
     this.errorMessage = '';
 
     try {
+      const user = this.authService.getUser();
+
+      if (!user) {
+        this.orders = [];
+        return;
+      }
+
+      const storageKey = `storm_orders_${user.username}`;
+
       const savedOrders = JSON.parse(
-        localStorage.getItem('storm_orders') || '[]',
+        localStorage.getItem(storageKey) || '[]',
       ) as Order[];
 
       if (!Array.isArray(savedOrders)) {
