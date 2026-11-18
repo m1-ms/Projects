@@ -1,3 +1,4 @@
+
 <section class="favorites-page">
   <div class="container">
 
@@ -19,7 +20,28 @@
       }
     </div>
 
-    @if (favorites().length > 0) {
+    @if (error()) {
+      <div class="favorites-error" role="alert">
+        <p>{{ error() }}</p>
+
+        <button
+          type="button"
+          (click)="reloadFavorites()"
+          [disabled]="loading()"
+        >
+          Try Again
+        </button>
+      </div>
+    }
+
+    @if (loading() && favorites().length === 0) {
+
+      <div class="empty-favorites">
+        <h2>Loading Favorites...</h2>
+        <p>Please wait while we load your favorite dishes.</p>
+      </div>
+
+    } @else if (favorites().length > 0) {
 
       <div class="favorites-count">
         {{ favorites().length }} favorite dishes
@@ -34,7 +56,11 @@
             <div class="favorite-card__image">
 
               <a [routerLink]="['/product-details', product.id]">
-                <img [src]="product.image" [alt]="product.name" />
+                <img
+                  [src]="product.image"
+                  [alt]="product.name"
+                  loading="lazy"
+                />
               </a>
 
               <button
@@ -61,9 +87,11 @@
                   {{ product.category }}
                 </span>
 
-                <span class="favorite-rating">
-                  ★ {{ product.rating }}
-                </span>
+                @if (product.rating > 0) {
+                  <span class="favorite-rating">
+                    ★ {{ product.rating }}
+                  </span>
+                }
               </div>
 
               <h3>
@@ -129,7 +157,7 @@
 
       </div>
 
-    } @else {
+    } @else if (!loading() && !error()) {
 
       <div class="empty-favorites">
 

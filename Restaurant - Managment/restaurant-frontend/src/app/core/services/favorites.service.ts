@@ -4,14 +4,14 @@ import {
   computed,
   effect,
   inject,
-  signal
+  signal,
 } from '@angular/core';
 
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, Subscription, finalize } from 'rxjs';
 
 import { AuthService } from './auth.service';
-import { ProductService } from './product.service';
+import { API_CONFIG } from '../api.config';
 
 export interface FavoriteProduct {
   id: number;
@@ -24,12 +24,29 @@ export interface FavoriteProduct {
   badge?: string;
 }
 
+interface ProductResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  categoryName: string | null;
+  imagePath: string | null;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  message: string;
+  success: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class FavoritesService {
+  private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
-  private readonly productService = inject(ProductService);
+
+  private readonly apiUrl = `${API_CONFIG.baseUrl}/favorites`;
 
   private readonly favoritesSignal = signal<FavoriteProduct[]>([]);
 
@@ -39,15 +56,27 @@ export class FavoritesService {
     () => this.favoritesSignal().length
   );
 
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+
   private readonly fallbackImage =
     'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=900&auto=format&fit=crop&q=85';
 
   constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       const username =
         this.authService.currentUser()?.username ?? null;
 
-      this.loadFavorites(username);
+      if (!username) {
+        this.favoritesSignal.set([]);
+        this.loading.set(false);
+        this.error.set(null);
+        return;
+      }
+
+      const subscription = this.loadFavorites();
+
+      onCleanup(() => subscription.unsubscribe());
     });
   }
 
@@ -58,111 +87,108 @@ export class FavoritesService {
   }
 
   toggleFavorite(product: FavoriteProduct): void {
-    if (!this.authService.getUser()) return;
+    if (!this.authService.getUser()) {
+      return;
+    }
 
     if (this.isFavorite(product.id)) {
       this.removeFavorite(product.id);
       return;
     }
 
-    this.updateFavorites([
-      ...this.favoritesSignal(),
-      product
-    ]);
+    this.sendMutation(
+      this.http.post<ApiResponse<ProductResponse[]>>(
+        `${this.apiUrl}/${product.id}`,
+        {}
+      )
+    );
   }
 
   removeFavorite(productId: number): void {
-    this.updateFavorites(
-      this.favoritesSignal().filter(
-        product => product.id !== productId
+    if (!this.authService.getUser()) {
+      return;
+    }
+
+    this.sendMutation(
+      this.http.delete<ApiResponse<ProductResponse[]>>(
+        `${this.apiUrl}/${productId}`
       )
     );
   }
 
   clearFavorites(): void {
-    this.updateFavorites([]);
+    if (!this.authService.getUser()) {
+      return;
+    }
+
+    this.sendMutation(
+      this.http.delete<ApiResponse<ProductResponse[]>>(
+        this.apiUrl
+      )
+    );
   }
 
   syncFavoritesWithBackend(): void {
-    const savedFavorites = this.favoritesSignal();
+    if (!this.authService.getUser()) {
+      return;
+    }
 
-    if (savedFavorites.length === 0) return;
+    this.loadFavorites();
+  }
 
-    const requests = savedFavorites.map(favorite =>
-      this.productService.getProductById(favorite.id).pipe(
-        map(response => {
-          if (!response.success || !response.data) {
-            return null;
-          }
+  private loadFavorites(): Subscription {
+    this.loading.set(true);
+    this.error.set(null);
 
-          const product = response.data;
-
-          return {
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            category: product.categoryName,
-            image: product.imagePath || this.fallbackImage,
-            rating: 0,
-            badge: undefined
-          } satisfies FavoriteProduct;
-        }),
-        catchError(error => {
-          // Remove products that no longer exist.
-          if (error.status === 404) {
-            return of(null);
-          }
-
-          // Keep saved data if the request fails temporarily.
-          return of(favorite);
-        })
+    return this.http
+      .get<ApiResponse<ProductResponse[]>>(this.apiUrl)
+      .pipe(
+        finalize(() => this.loading.set(false))
       )
-    );
+      .subscribe({
+        next: response => this.handleResponse(response),
+        error: error => this.handleError(error),
+      });
+  }
 
-    forkJoin(requests).subscribe(products => {
-      this.updateFavorites(
-        products.filter(
-          (product): product is FavoriteProduct => product !== null
-        )
-      );
+  private sendMutation(
+    request: Observable<ApiResponse<ProductResponse[]>>
+  ): void {
+    this.error.set(null);
+
+    request.subscribe({
+      next: response => this.handleResponse(response),
+      error: error => this.handleError(error),
     });
   }
 
-  private updateFavorites(products: FavoriteProduct[]): void {
-    const user = this.authService.getUser();
-
-    if (!user) {
-      this.favoritesSignal.set([]);
+  private handleResponse(
+    response: ApiResponse<ProductResponse[]>
+  ): void {
+    if (!response.success || !Array.isArray(response.data)) {
+      this.error.set('Failed to load favorites.');
       return;
     }
 
-    const key = `storm_favorites_${user.username}`;
+    const products: FavoriteProduct[] = response.data.map(product => ({
+      id: product.id,
+      name: product.name,
+      description: product.description ?? '',
+      price: Number(product.price),
+      category: product.categoryName ?? '',
+      image: product.imagePath || this.fallbackImage,
+      rating: 0,
+    }));
 
     this.favoritesSignal.set(products);
-
-    localStorage.setItem(key, JSON.stringify(products));
+    this.error.set(null);
   }
 
-  private loadFavorites(username: string | null): void {
-    if (!username) {
-      this.favoritesSignal.set([]);
-      return;
-    }
+  private handleError(error: unknown): void {
+    console.error('Favorites API Error:', error);
 
-    try {
-      const key = `storm_favorites_${username}`;
-      const saved = localStorage.getItem(key);
-
-      const products = saved
-        ? JSON.parse(saved) as FavoriteProduct[]
-        : [];
-
-      this.favoritesSignal.set(
-        Array.isArray(products) ? products : []
-      );
-    } catch {
-      this.favoritesSignal.set([]);
-    }
+    this.error.set(
+      'Something went wrong while updating favorites.'
+    );
   }
 }

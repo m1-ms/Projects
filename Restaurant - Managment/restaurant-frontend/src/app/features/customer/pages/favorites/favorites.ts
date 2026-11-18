@@ -1,5 +1,5 @@
 
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import {
@@ -15,13 +15,15 @@ import { CartService } from '../../../../core/services/cart.service';
   templateUrl: './favorites.html',
   styleUrl: './favorites.scss',
 })
-export class Favorites implements OnInit {
+export class Favorites {
   private favoritesService = inject(FavoritesService);
   private cartService = inject(CartService);
 
   favorites = this.favoritesService.favorites;
+  loading = this.favoritesService.loading;
+  error = this.favoritesService.error;
 
-  ngOnInit(): void {
+  reloadFavorites(): void {
     this.favoritesService.syncFavoritesWithBackend();
   }
 
