@@ -1,8 +1,23 @@
-import { Component, inject } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectorRef,
+} from '@angular/core';
+
 import { RouterLink } from '@angular/router';
 
 import { CartService } from '../../../../core/services/cart.service';
-import { FavoriteProduct, FavoritesService } from '../../../../core/services/favorites.service';
+
+import {
+  FavoriteProduct,
+  FavoritesService,
+} from '../../../../core/services/favorites.service';
+
+import {
+  ProductService,
+  Product,
+} from '../../../../core/services/product.service';
 
 interface FeaturedProduct {
   id: number;
@@ -21,61 +36,69 @@ interface FeaturedProduct {
   templateUrl: './featured-dishes.html',
   styleUrl: './featured-dishes.scss',
 })
-export class FeaturedDishes {
+export class FeaturedDishes implements OnInit {
   private cartService = inject(CartService);
   private favoritesService = inject(FavoritesService);
+  private productService = inject(ProductService);
+  private cdr = inject(ChangeDetectorRef);
 
-  products: FeaturedProduct[] = [
-    {
-      id: 1,
-      name: 'Classic Beef Burger',
-      description: 'Juicy grilled beef, fresh lettuce, tomato and our signature sauce.',
-      price: 12.99,
-      category: 'Burgers',
-      image:
-        'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=700&auto=format&fit=crop&q=85',
-      rating: 4.9,
-      badge: 'Bestseller',
-    },
-    {
-      id: 3,
-      name: 'Italian Cheese Pizza',
-      description: 'Authentic Italian pizza topped with mozzarella and fresh basil.',
-      price: 15.5,
-      category: 'Pizza',
-      image:
-        'https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?w=700&auto=format&fit=crop&q=85',
-      rating: 4.8,
-      badge: 'Popular',
-    },
-    {
-      id: 5,
-      name: 'Fresh Garden Salad',
-      description: 'A refreshing mix of seasonal vegetables and house dressing.',
-      price: 9.99,
-      category: 'Healthy Food',
-      image:
-        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=700&auto=format&fit=crop&q=85',
-      rating: 4.7,
-      badge: 'Healthy',
-    },
-    {
-      id: 7,
-      name: 'Chocolate Delight',
-      description: 'Rich chocolate dessert with a soft center and creamy topping.',
-      price: 8.5,
-      category: 'Desserts',
-      image:
-        'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=700&auto=format&fit=crop&q=85',
-      rating: 4.9,
-      badge: 'New',
-    },
-  ];
+  products: FeaturedProduct[] = [];
+
+  loading = false;
+  errorMessage = '';
+
+  private readonly fallbackImage =
+    'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=700&auto=format&fit=crop&q=85';
+
+  ngOnInit(): void {
+    this.loadProducts();
+  }
+
+  loadProducts(): void {
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.productService.getProducts().subscribe({
+      next: (response) => {
+        const backendProducts = response.data?.content ?? [];
+
+        this.products = backendProducts
+          .slice(0, 4)
+          .map((product: Product) => this.mapProduct(product));
+
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('Failed to load featured products:', error);
+
+        this.errorMessage =
+          'Unable to load featured dishes. Please try again.';
+
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private mapProduct(product: Product): FeaturedProduct {
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      category: product.categoryName,
+      image: product.imagePath || this.fallbackImage,
+      rating: 0,
+    };
+  }
 
   getProductQuantity(productId: number): number {
     return (
-      this.cartService.items().find((item) => item.id === productId && !item.selectedSize)
-        ?.quantity ?? 0
+      this.cartService.items().find(
+        item => item.id === productId && !item.selectedSize,
+      )?.quantity ?? 0
     );
   }
 

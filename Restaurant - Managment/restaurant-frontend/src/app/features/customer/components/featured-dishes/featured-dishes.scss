@@ -158,7 +158,7 @@
   font-size: 11px;
 }
 
-.dish-card__meta span:last-child {
+.dish-card__meta span:nth-child(2) {
   color: #d69b2d;
 }
 
@@ -281,4 +281,24 @@
   .dish-card__image {
     height: 220px;
   }
+}
+
+.featured-dishes__state {
+  padding: 35px 20px;
+  border: 1px solid #eee5dc;
+  border-radius: 13px;
+  color: #81786f;
+  background: #fff;
+  text-align: center;
+  font-size: 14px;
+}
+
+.featured-dishes__error button {
+  margin-top: 12px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 7px;
+  background: #e3242b;
+  color: #fff;
+  cursor: pointer;
 }
