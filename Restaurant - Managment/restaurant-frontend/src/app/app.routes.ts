@@ -73,7 +73,7 @@ export const routes: Routes = [
         path: 'contact',
         loadComponent: () =>
           import('./features/customer/pages/contact/contact')
-            .then(m => m.Contact),
+            .then(m => m.Contacts),
       },
       {
         path: 'favorites',

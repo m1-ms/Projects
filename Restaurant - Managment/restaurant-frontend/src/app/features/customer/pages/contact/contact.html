@@ -3,201 +3,265 @@
 
   <!-- Hero -->
   <div class="contact-hero">
-    <div class="container contact-hero__content">
-      <span class="contact-hero__eyebrow">GET IN TOUCH</span>
+    <span class="hero-eyebrow">GET IN TOUCH</span>
 
-      <h1>
-        We'd Love to <span>Hear From You.</span>
-      </h1>
+    <h1>We'd Love to Hear From You</h1>
 
-      <p>
-        Have a question, suggestion, or just want to say hello?
-        Our team is always happy to hear from you.
-      </p>
-
-      <div class="contact-hero__decoration">S</div>
-    </div>
+    <p>
+      Have a question, suggestion, or feedback?
+      Send us a message and we'll get back to you.
+    </p>
   </div>
 
   <!-- Contact Content -->
-  <section class="contact-section">
-    <div class="container contact-grid">
+  <div class="contact-container">
 
-      <!-- Contact Information -->
-      <div class="contact-info">
+    <!-- Contact Information -->
+    <div class="contact-info">
 
-        <span class="section-label">CONTACT INFORMATION</span>
+      <span class="section-eyebrow">CONTACT US</span>
 
-        <h2>
-          Let's Start a <span>Conversation</span>
-        </h2>
+      <h2>Let's Start a Conversation</h2>
 
-        <p class="contact-info__description">
-          We're here to make your experience exceptional.
-          Reach out to us through any of the following channels.
-        </p>
+      <p class="info-description">
+        Your feedback matters to us. Reach out whenever you need help
+        or have something to share.
+      </p>
 
-        <div class="contact-info__items">
-
-          <div class="contact-info__item">
-            <div class="contact-info__icon">✉</div>
-            <div>
-              <h3>Email Us</h3>
-              <p>info@stormrestaurant.com</p>
-            </div>
-          </div>
-
-          <div class="contact-info__item">
-            <div class="contact-info__icon">☎</div>
-            <div>
-              <h3>Call Us</h3>
-              <p>+20 100 000 0000</p>
-            </div>
-          </div>
-
-          <div class="contact-info__item">
-            <div class="contact-info__icon">⌖</div>
-            <div>
-              <h3>Visit Us</h3>
-              <p>Cairo, Egypt</p>
-            </div>
-          </div>
-
-          <div class="contact-info__item">
-            <div class="contact-info__icon">◷</div>
-            <div>
-              <h3>Opening Hours</h3>
-              <p>Every Day: 10:00 AM – 12:00 AM</p>
-            </div>
-          </div>
-
+      <!-- Email -->
+      <div class="info-item">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="m3 7 9 6 9-6"/>
+          </svg>
         </div>
 
-        <div class="contact-info__social">
-          <h3>Follow Our Journey</h3>
-
-          <div class="contact-social-links">
-            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer">f</a>
-            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">ig</a>
-            <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">in</a>
-          </div>
+        <div>
+          <h3>Email Us</h3>
+          <p>info&#64;stormrestaurant.com</p>
         </div>
-
       </div>
 
-      <!-- Contact Form -->
-      <div class="contact-form-card">
-
-        <div class="contact-form-card__header">
-          <span class="section-label">SEND US A MESSAGE</span>
-          <h2>Drop Us a <span>Line</span></h2>
-          <p>Fill out the form below and we'll get back to you.</p>
+      <!-- Working Hours -->
+      <div class="info-item">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+          </svg>
         </div>
 
-        @if (!submitted) {
-          <form #contactNgForm="ngForm" (ngSubmit)="onSubmit()" class="contact-form">
+        <div>
+          <h3>Working Hours</h3>
+          <p>Every day, 10:00 AM – 11:00 PM</p>
+        </div>
+      </div>
 
-            <div class="contact-form__row">
+      <!-- Location -->
+      <div class="info-item">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/>
+            <circle cx="12" cy="10" r="2.5"/>
+          </svg>
+        </div>
 
-              <div class="form-group">
-                <label for="name">Your Name</label>
-                <input
-                  id="name"
-                  type="text"
-                  name="name"
-                  [(ngModel)]="contactForm.name"
-                  placeholder="Enter your name"
-                  required
-                  minlength="2"
-                />
-              </div>
+        <div>
+          <h3>Our Location</h3>
+          <p>Egypt</p>
+        </div>
+      </div>
 
-              <div class="form-group">
-                <label for="email">Email Address</label>
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  [(ngModel)]="contactForm.email"
-                  placeholder="Enter your email"
-                  required
-                  email
-                />
-              </div>
+    </div>
 
-            </div>
+    <!-- Contact Form -->
+    <div class="contact-form-card">
 
-            <div class="form-group">
-              <label for="subject">Subject</label>
-              <input
-                id="subject"
-                type="text"
-                name="subject"
-                [(ngModel)]="contactForm.subject"
-                placeholder="What is this about?"
-                required
-              />
-            </div>
+      @if (submitted) {
 
-            <div class="form-group">
-              <label for="message">Your Message</label>
-              <textarea
-                id="message"
-                name="message"
-                [(ngModel)]="contactForm.message"
-                placeholder="Write your message here..."
-                rows="6"
-                required
-                minlength="10"
-              ></textarea>
-            </div>
+        <div class="success-state">
 
-            <button
-              type="submit"
-              class="contact-form__submit"
-              [disabled]="contactNgForm.invalid"
-            >
-              Send Message
-              <span>→</span>
-            </button>
+          <div class="success-icon">
+            <i class="ti ti-check"></i>
+          </div>
 
-          </form>
-        } @else {
-          <div class="contact-success">
-            <div class="contact-success__icon">✓</div>
-            <h3>Message Received!</h3>
-            <p>
-              Thank you for reaching out. Your message has been
-              recorded in this demo.
-            </p>
+          <h2>Message Sent Successfully!</h2>
+
+          <p>{{ successMessage }}</p>
+
+          <button
+            type="button"
+            class="submit-button"
+            (click)="sendAnotherMessage()">
+            <i class="ti ti-plus"></i>
+            Send Another Message
+          </button>
+
+        </div>
+
+      } @else {
+
+        <div class="form-heading">
+          <span class="section-eyebrow">SEND A MESSAGE</span>
+
+          <h2>Get in Touch</h2>
+
+          <p>
+            Fill out the form below and we'll respond as soon as possible.
+          </p>
+        </div>
+
+        @if (errorMessage) {
+          <div class="alert alert-error">
+            <i class="ti ti-alert-circle"></i>
+            {{ errorMessage }}
+          </div>
+        }
+
+        @if (loginRequired) {
+          <div class="alert alert-warning">
+            <i class="ti ti-lock"></i>
+
+            <span>
+              You need to log in before sending a message.
+            </span>
+
             <button
               type="button"
-              (click)="submitted = false"
-              class="contact-success__button"
-            >
-              Send Another Message
+              class="login-link"
+              (click)="goToLogin()">
+              Login Now
             </button>
           </div>
         }
 
-      </div>
+        <form (ngSubmit)="onSubmit()" #contactForm="ngForm">
+
+          <!-- Name and Email -->
+          <div class="form-row">
+
+            <div class="form-group">
+              <label for="name">Full Name</label>
+
+              <input
+                id="name"
+                type="text"
+                name="name"
+                [(ngModel)]="name"
+                placeholder="Enter your name"
+                required
+                maxlength="100"
+                #nameInput="ngModel">
+
+              @if (nameInput.invalid && nameInput.touched) {
+                <small class="field-error">
+                  Name is required.
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+
+              <input
+                id="email"
+                type="email"
+                name="email"
+                [(ngModel)]="email"
+                placeholder="Enter your email"
+                required
+                email
+                maxlength="150"
+                #emailInput="ngModel">
+
+              @if (emailInput.invalid && emailInput.touched) {
+                <small class="field-error">
+                  Enter a valid email address.
+                </small>
+              }
+            </div>
+
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group">
+            <label for="subject">Subject</label>
+
+            <input
+              id="subject"
+              type="text"
+              name="subject"
+              [(ngModel)]="subject"
+              placeholder="What is your message about?"
+              required
+              maxlength="200"
+              #subjectInput="ngModel">
+
+            @if (subjectInput.invalid && subjectInput.touched) {
+              <small class="field-error">
+                Subject is required.
+              </small>
+            }
+          </div>
+
+          <!-- Message -->
+          <div class="form-group">
+            <label for="message">Message</label>
+
+            <textarea
+              id="message"
+              name="message"
+              [(ngModel)]="message"
+              placeholder="Write your message here..."
+              rows="6"
+              required
+              maxlength="1000"
+              #messageInput="ngModel"></textarea>
+
+            <div class="textarea-footer">
+
+              @if (messageInput.invalid && messageInput.touched) {
+                <small class="field-error">
+                  Message is required.
+                </small>
+              } @else {
+                <small>Tell us how we can help.</small>
+              }
+
+              <small>{{ message.length }}/1000</small>
+
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="submit-button"
+            [disabled]="loading">
+
+            @if (loading) {
+              <i class="ti ti-loader-2"></i>
+              Sending...
+            } @else {
+              <i class="ti ti-send"></i>
+              Send Message
+            }
+
+          </button>
+
+        </form>
+
+      }
 
     </div>
-  </section>
 
-  <!-- Bottom Banner -->
-  <section class="contact-banner">
-    <div class="container contact-banner__content">
-      <div>
-        <span>YOUR TABLE IS WAITING</span>
-        <h2>Great Food. Great Moments.</h2>
-        <p>Come and experience something unforgettable.</p>
-      </div>
-
-      <a routerLink="/menu" class="contact-banner__button">
-        Explore Our Menu <span>→</span>
-      </a>
-    </div>
-  </section>
+  </div>
 
 </section>
