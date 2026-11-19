@@ -1,4 +1,3 @@
-
 <section class="chefs-page">
 
   <!-- Hero Section -->
@@ -27,18 +26,8 @@
 
         <div class="chefs-hero__stats">
           <div>
-            <strong>{{ totalChefs }}+</strong>
-            <span>Expert Chefs</span>
-          </div>
-
-          <div>
-            <strong>{{ averageExperience }}+</strong>
-            <span>Years Experience</span>
-          </div>
-
-          <div>
-            <strong>4.8</strong>
-            <span>Average Rating</span>
+            <strong>{{ totalChefs }}</strong>
+            <span>Our Professional Chefs</span>
           </div>
         </div>
       </div>
@@ -82,68 +71,90 @@
 
         <p>
           Every member of our culinary team brings unique skills
-          and years of experience to your table.
+          and expertise to your table.
         </p>
       </div>
 
-      <div class="chefs-grid">
+      @if (loading) {
+        <div class="chefs-section__heading">
+          <h2>Loading Chefs...</h2>
+          <p>Please wait while we load our professional team.</p>
+        </div>
+      }
+      @else if (errorMessage) {
+        <div class="chefs-section__heading">
+          <h2>Unable to Load Chefs</h2>
+          <p>{{ errorMessage }}</p>
 
-        @for (chef of chefs; track chef.id) {
-
-          <article class="chef-card">
-
-            <div class="chef-card__image-wrapper">
-
-              <img
-                [src]="chef.image"
-                [alt]="chef.name"
-                class="chef-card__image"
-                loading="lazy"
-              />
-
-              <span class="chef-card__experience">
-                {{ chef.experience }} Years Experience
-              </span>
-
-              <div class="chef-card__rating">
-                <span>★</span>
-                {{ chef.rating }}
+          <button
+            type="button"
+            class="chefs-hero__button"
+            (click)="loadChefs()"
+          >
+            Try Again
+            <span>↻</span>
+          </button>
+        </div>
+      }
+      @else if (chefs.length === 0) {
+        <div class="chefs-section__heading">
+          <h2>Our Team Is Growing</h2>
+          <p>
+            Our chef profiles are currently unavailable.
+            Please check back soon.
+          </p>
+        </div>
+      }
+      @else {
+        <div class="chefs-grid">
+          @for (chef of chefs; track chef.id) {
+            <article class="chef-card">
+              <div class="chef-card__image-wrapper">
+                <img
+                  [src]="chef.image"
+                  [alt]="chef.name"
+                  class="chef-card__image"
+                  loading="lazy"
+                />
               </div>
 
-            </div>
+              <div class="chef-card__content">
+                <span class="chef-card__role">PROFESSIONAL CHEF</span>
+                <h3>{{ chef.name }}</h3>
+                <span class="chef-card__specialty">
+            {{ chef.specialization }}
+          </span>
 
-            <div class="chef-card__content">
+                <div class="chef-card__footer">
+            <span class="chef-card__passion">
+              <span>✦</span>
+              Cooking With Passion
+            </span>
+                  <span class="chef-card__number">{{ chef.id }}</span>
+                </div>
 
-              <span class="chef-card__role">
-                {{ chef.role }}
-              </span>
-
-              <h3>{{ chef.name }}</h3>
-
-              <span class="chef-card__specialty">
-                {{ chef.specialty }}
-              </span>
-
-              <p>{{ chef.description }}</p>
-
-              <div class="chef-card__footer">
-                <span class="chef-card__passion">
-                  <span>✦</span>
-                  Cooking With Passion
-                </span>
-
-                <span class="chef-card__number">
-                  0{{ chef.id }}
-                </span>
+                @if (
+                  chef.facebookLink ||
+                  chef.twitterLink ||
+                  chef.instagramLink
+                  ) {
+                  <div class="chef-social-links">
+                    @if (chef.facebookLink) {
+                      <a [href]="chef.facebookLink" target="_blank" rel="noopener noreferrer">Facebook</a>
+                    }
+                    @if (chef.twitterLink) {
+                      <a [href]="chef.twitterLink" target="_blank" rel="noopener noreferrer">Twitter</a>
+                    }
+                    @if (chef.instagramLink) {
+                      <a [href]="chef.instagramLink" target="_blank" rel="noopener noreferrer">Instagram</a>
+                    }
+                  </div>
+                }
               </div>
-
-            </div>
-
-          </article>
-
-        }
-
-      </div>
+            </article>
+          }
+        </div>
+      }
 
     </div>
   </section>
