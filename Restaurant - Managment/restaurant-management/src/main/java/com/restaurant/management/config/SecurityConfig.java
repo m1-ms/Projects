@@ -82,7 +82,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 CATALOG_PATHS
-                        ).hasAnyRole(user, admin)
+                        ).permitAll()
 
                         .requestMatchers(
                                 HttpMethod.POST,
