@@ -1,17 +1,13 @@
-import { Component } from '@angular/core';
+
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 
-interface ContactMessage {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-  date: string;
-  status: 'Unread' | 'Read' | 'Replied';
-}
+import {
+  ContactService,
+  ContactInfo,
+} from '../../../../core/services/contact.service';
 
 @Component({
   selector: 'app-contacts',
@@ -19,154 +15,185 @@ interface ContactMessage {
   templateUrl: './contacts.html',
   styleUrl: './contacts.scss',
 })
-export class Contacts {
-  searchTerm = '';
-  selectedStatus = 'All';
-  selectedMessage: ContactMessage | null = null;
+export class Contacts implements OnInit {
+  private readonly contactService = inject(ContactService);
+
+  messages: ContactInfo[] = [];
+
+  selectedMessage: ContactInfo | null = null;
   showDetailsModal = false;
 
-  messages: ContactMessage[] = [
-    {
-      id: 1,
-      name: 'Ahmed Mohamed',
-      email: 'ahmed@example.com',
-      phone: '+20 100 123 4567',
-      subject: 'Reservation Inquiry',
-      message: 'Hello, I would like to ask about reserving a table for 6 people next Friday evening. Is there any availability?',
-      date: '2026-11-07T10:30:00',
-      status: 'Unread',
-    },
-    {
-      id: 2,
-      name: 'Sara Hassan',
-      email: 'sara@example.com',
-      phone: '+20 101 234 5678',
-      subject: 'Food Quality',
-      message: 'I really enjoyed my last visit. The food was excellent and the service was very professional.',
-      date: '2026-11-06T15:45:00',
-      status: 'Read',
-    },
-    {
-      id: 3,
-      name: 'Omar Khaled',
-      email: 'omar@example.com',
-      phone: '+20 102 345 6789',
-      subject: 'Order Issue',
-      message: 'My recent order arrived later than expected. I would appreciate your help regarding this issue.',
-      date: '2026-11-05T18:20:00',
-      status: 'Replied',
-    },
-    {
-      id: 4,
-      name: 'Mariam Ali',
-      email: 'mariam@example.com',
-      phone: '+20 103 456 7890',
-      subject: 'Catering Services',
-      message: 'I am interested in your catering services for a private event. Please send me more information about your packages.',
-      date: '2026-11-04T12:10:00',
-      status: 'Unread',
-    },
-    {
-      id: 5,
-      name: 'Youssef Ibrahim',
-      email: 'youssef@example.com',
-      phone: '+20 104 567 8901',
-      subject: 'Business Partnership',
-      message: 'We would like to discuss a potential business partnership with Storm Restaurant.',
-      date: '2026-11-03T09:15:00',
-      status: 'Read',
-    },
-    {
-      id: 6,
-      name: 'Nour Samir',
-      email: 'nour@example.com',
-      phone: '+20 105 678 9012',
-      subject: 'General Feedback',
-      message: 'Thank you for providing such a wonderful dining experience. I will definitely visit again.',
-      date: '2026-11-02T20:00:00',
-      status: 'Replied',
-    },
-  ];
+  searchTerm = '';
+
+  loading = false;
+  detailsLoading = false;
+
+  errorMessage = '';
+  detailsErrorMessage = '';
+
+  deletingMessageId: number | null = null;
+
+  page = 1;
+  pageSize = 10;
+  totalElements = 0;
+  totalPages = 0;
+
+  ngOnInit(): void {
+    this.loadMessages();
+  }
 
   get totalMessages(): number {
+    return this.totalElements;
+  }
+
+  get currentPageMessages(): number {
     return this.messages.length;
   }
 
-  get unreadMessages(): number {
-    return this.messages.filter(message => message.status === 'Unread').length;
+  get filteredMessages(): ContactInfo[] {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return this.messages;
+    }
+
+    return this.messages.filter(message =>
+      message.name.toLowerCase().includes(term) ||
+      message.email.toLowerCase().includes(term) ||
+      message.subject.toLowerCase().includes(term) ||
+      message.message.toLowerCase().includes(term) ||
+      message.username.toLowerCase().includes(term)
+    );
   }
 
-  get readMessages(): number {
-    return this.messages.filter(message => message.status === 'Read').length;
+  loadMessages(page = this.page): void {
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.contactService.getMessages(page, this.pageSize).subscribe({
+      next: response => {
+        this.loading = false;
+
+        if (!response.success || !response.data) {
+          this.messages = [];
+          this.errorMessage =
+            response.message || 'Unable to load contact messages.';
+          return;
+        }
+
+        this.messages = response.data.content ?? [];
+        this.page = response.data.page;
+        this.totalElements = response.data.totalElements;
+        this.totalPages = response.data.totalPages;
+      },
+
+      error: (error: HttpErrorResponse) => {
+        this.loading = false;
+        this.messages = [];
+
+        if (error.status === 401 || error.status === 403) {
+          this.errorMessage =
+            'You are not authorized to view contact messages.';
+        } else if (error.status === 0) {
+          this.errorMessage =
+            'Unable to connect to the server. Please try again.';
+        } else {
+          this.errorMessage =
+            error.error?.message ||
+            'Something went wrong while loading messages.';
+        }
+      },
+    });
   }
 
-  get repliedMessages(): number {
-    return this.messages.filter(message => message.status === 'Replied').length;
-  }
-
-  get filteredMessages(): ContactMessage[] {
-    const term = this.searchTerm.toLowerCase().trim();
-
-    return this.messages
-      .filter(message => {
-        const matchesSearch =
-          message.name.toLowerCase().includes(term) ||
-          message.email.toLowerCase().includes(term) ||
-          message.subject.toLowerCase().includes(term);
-
-        const matchesStatus =
-          this.selectedStatus === 'All' ||
-          message.status === this.selectedStatus;
-
-        return matchesSearch && matchesStatus;
-      })
-      .sort(
-        (a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-  }
-
-  openMessage(message: ContactMessage): void {
+  openMessage(message: ContactInfo): void {
     this.selectedMessage = message;
     this.showDetailsModal = true;
+    this.detailsLoading = true;
+    this.detailsErrorMessage = '';
 
-    if (message.status === 'Unread') {
-      message.status = 'Read';
-      this.messages = [...this.messages];
-    }
+    this.contactService.getMessageById(message.id).subscribe({
+      next: response => {
+        this.detailsLoading = false;
+
+        if (!response.success || !response.data) {
+          this.detailsErrorMessage =
+            response.message || 'Unable to load message details.';
+          return;
+        }
+
+        this.selectedMessage = response.data;
+      },
+
+      error: (error: HttpErrorResponse) => {
+        this.detailsLoading = false;
+
+        this.detailsErrorMessage =
+          error.error?.message ||
+          'Unable to load message details.';
+      },
+    });
   }
 
   closeModal(): void {
     this.showDetailsModal = false;
     this.selectedMessage = null;
+    this.detailsErrorMessage = '';
   }
 
-  updateStatus(message: ContactMessage, status: ContactMessage['status']): void {
-    message.status = status;
-    this.messages = [...this.messages];
-
-    if (this.selectedMessage?.id === message.id) {
-      this.selectedMessage = { ...message };
-    }
-  }
-
-  deleteMessage(message: ContactMessage): void {
+  deleteMessage(message: ContactInfo): void {
     const confirmed = confirm(
       `Are you sure you want to delete the message from ${message.name}?`
     );
 
-    if (!confirmed) {
+    if (!confirmed || this.deletingMessageId !== null) {
       return;
     }
 
-    this.messages = this.messages.filter(item => item.id !== message.id);
+    this.deletingMessageId = message.id;
+    this.errorMessage = '';
 
-    if (this.selectedMessage?.id === message.id) {
-      this.closeModal();
+    this.contactService.deleteMessage(message.id).subscribe({
+      next: response => {
+        this.deletingMessageId = null;
+
+        if (!response.success) {
+          this.errorMessage =
+            response.message || 'Unable to delete this message.';
+          return;
+        }
+
+        if (this.selectedMessage?.id === message.id) {
+          this.closeModal();
+        }
+
+        const shouldGoToPreviousPage =
+          this.messages.length === 1 && this.page > 1;
+
+        this.loadMessages(
+          shouldGoToPreviousPage ? this.page - 1 : this.page
+        );
+      },
+
+      error: (error: HttpErrorResponse) => {
+        this.deletingMessageId = null;
+
+        this.errorMessage =
+          error.error?.message ||
+          'Something went wrong while deleting the message.';
+      },
+    });
+  }
+
+  previousPage(): void {
+    if (this.page > 1 && !this.loading) {
+      this.loadMessages(this.page - 1);
     }
   }
 
-  getStatusClass(status: ContactMessage['status']): string {
-    return status.toLowerCase();
+  nextPage(): void {
+    if (this.page < this.totalPages && !this.loading) {
+      this.loadMessages(this.page + 1);
+    }
   }
 }

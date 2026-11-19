@@ -1,309 +1,315 @@
 
-<section class="contacts-page">
+<div class="contacts-page">
 
-  <!-- Page Header -->
-  <div class="page-header">
+  <header class="page-header">
     <div>
       <span class="page-eyebrow">CUSTOMER SUPPORT</span>
       <h1>Contact Messages</h1>
-      <p>Manage customer inquiries, feedback and support requests.</p>
+      <p>Manage messages submitted by your customers.</p>
     </div>
-  </div>
 
-  <!-- Statistics -->
+    <button
+      class="refresh-button"
+      type="button"
+      (click)="loadMessages()"
+      [disabled]="loading">
+      <span>↻</span>
+      Refresh
+    </button>
+  </header>
+
   <div class="stats-grid">
-
     <div class="stat-card">
-      <div class="stat-icon stat-icon--primary">
-        <span>M</span>
-      </div>
+      <div class="stat-icon">✉</div>
       <div>
-        <p>Total Messages</p>
+        <span>Total Messages</span>
         <h2>{{ totalMessages }}</h2>
-        <span>All received messages</span>
       </div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon stat-icon--warning">
-        <span>!</span>
-      </div>
+      <div class="stat-icon">▤</div>
       <div>
-        <p>Unread</p>
-        <h2>{{ unreadMessages }}</h2>
-        <span>Waiting for review</span>
+        <span>Current Page</span>
+        <h2>{{ currentPageMessages }}</h2>
       </div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon stat-icon--info">
-        <span>R</span>
-      </div>
+      <div class="stat-icon">#</div>
       <div>
-        <p>Read</p>
-        <h2>{{ readMessages }}</h2>
-        <span>Reviewed messages</span>
+        <span>Page Number</span>
+        <h2>{{ page }}</h2>
       </div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon stat-icon--success">
-        <span>✓</span>
-      </div>
+      <div class="stat-icon">▦</div>
       <div>
-        <p>Replied</p>
-        <h2>{{ repliedMessages }}</h2>
-        <span>Resolved inquiries</span>
+        <span>Total Pages</span>
+        <h2>{{ totalPages }}</h2>
       </div>
     </div>
-
   </div>
 
-  <!-- Messages Section -->
-  <div class="messages-card">
+  <section class="messages-section">
 
     <div class="messages-header">
       <div>
         <h2>All Messages</h2>
-        <p>Review and manage incoming customer messages.</p>
+        <p>Messages received through the contact form.</p>
       </div>
 
       <span class="messages-count">
-        {{ filteredMessages.length }} Messages
+        {{ filteredMessages.length }} messages
       </span>
     </div>
 
-    <!-- Filters -->
-    <div class="filters">
-
+    <div class="filters-bar">
       <div class="search-box">
-        <span>⌕</span>
         <input
           type="text"
-          placeholder="Search by name, email or subject..."
-          [(ngModel)]="searchTerm"
-        />
+          placeholder="Search by name, email, subject..."
+          [(ngModel)]="searchTerm">
       </div>
-
-      <select [(ngModel)]="selectedStatus">
-        <option value="All">All Messages</option>
-        <option value="Unread">Unread</option>
-        <option value="Read">Read</option>
-        <option value="Replied">Replied</option>
-      </select>
-
     </div>
 
-    <!-- Messages Table -->
-    <div class="table-wrapper">
+    @if (errorMessage) {
+      <div class="error-state">
+        {{ errorMessage }}
+        <button type="button" (click)="loadMessages()">
+          Try Again
+        </button>
+      </div>
+    }
 
-      <table>
-        <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Subject</th>
-          <th>Message</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-        </thead>
+    @if (loading) {
+      <div class="empty-state">
+        <div class="empty-icon">⟳</div>
+        <h3>Loading Messages</h3>
+        <p>Please wait while we retrieve contact messages.</p>
+      </div>
+    } @else if (!errorMessage && filteredMessages.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">✉</div>
 
-        <tbody>
+        <h3>
+          {{ searchTerm ? 'No Matching Messages' : 'No Messages Yet' }}
+        </h3>
 
-          @for (message of filteredMessages; track message.id) {
-            <tr [class.unread-row]="message.status === 'Unread'">
+        <p>
+          {{
+            searchTerm
+              ? 'Try searching with another keyword.'
+              : 'Customer messages will appear here when submitted.'
+          }}
+        </p>
+      </div>
+    } @else if (!errorMessage) {
 
-              <td>
-                <div class="customer-info">
-                  <div class="customer-avatar">
-                    {{ message.name.charAt(0).toUpperCase() }}
+      <div class="table-wrapper">
+        <table class="messages-table">
+          <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Subject</th>
+            <th>Message</th>
+            <th>Received Date</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+
+          <tbody>
+            @for (message of filteredMessages; track message.id) {
+              <tr>
+                <td>
+                  <div class="customer-info">
+                    <div class="customer-avatar">
+                      {{ message.name.charAt(0).toUpperCase() }}
+                    </div>
+
+                    <div>
+                      <strong>{{ message.name }}</strong>
+                      <span>{{ message.email }}</span>
+                    </div>
                   </div>
+                </td>
 
-                  <div>
-                    <strong>{{ message.name }}</strong>
-                    <span>{{ message.email }}</span>
+                <td>
+                  <span class="subject-text">
+                    {{ message.subject }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="message-preview">
+                    {{ message.message }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="date-text">
+                    {{ message.createdDate | date:'mediumDate' }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="action-buttons">
+                    <button
+                      type="button"
+                      class="view-btn"
+                      (click)="openMessage(message)">
+                      View
+                    </button>
+
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      (click)="deleteMessage(message)"
+                      [disabled]="deletingMessageId === message.id">
+                      {{
+                        deletingMessageId === message.id
+                          ? 'Deleting...'
+                          : 'Delete'
+                      }}
+                    </button>
                   </div>
-                </div>
-              </td>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
 
-              <td>
-                <strong class="subject-text">
-                  {{ message.subject }}
-                </strong>
-              </td>
+    @if (!loading && totalPages > 0) {
+      <div class="pagination">
 
-              <td>
-                <p class="message-preview">
-                  {{ message.message }}
-                </p>
-              </td>
+        <div class="pagination-info">
+          Page {{ page }} of {{ totalPages }}
+        </div>
 
-              <td>
-                <span class="date-text">
-                  {{ message.date | date:'MMM d, y' }}
-                </span>
-              </td>
-
-              <td>
-                <span
-                  class="status-badge"
-                  [class.unread]="message.status === 'Unread'"
-                  [class.read]="message.status === 'Read'"
-                  [class.replied]="message.status === 'Replied'"
-                >
-                  {{ message.status }}
-                </span>
-              </td>
-
-              <td>
-                <div class="action-buttons">
-
-                  <button
-                    class="view-button"
-                    title="View Message"
-                    (click)="openMessage(message)"
-                  >
-                    View
-                  </button>
-
-                  <button
-                    class="delete-button"
-                    title="Delete Message"
-                    (click)="deleteMessage(message)"
-                  >
-                    Delete
-                  </button>
-
-                </div>
-              </td>
-
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6">
-                <div class="empty-state">
-                  <div class="empty-icon">M</div>
-                  <h3>No Messages Found</h3>
-                  <p>Try changing your search or filter criteria.</p>
-                </div>
-              </td>
-            </tr>
-          }
-
-        </tbody>
-      </table>
-
-    </div>
-
-  </div>
-
-  <!-- Message Details Modal -->
-  @if (showDetailsModal && selectedMessage; as message) {
-    <div class="modal-overlay" (click)="closeModal()">
-
-      <div class="message-modal" (click)="$event.stopPropagation()">
-
-        <div class="modal-header">
-          <div>
-            <span class="modal-eyebrow">CUSTOMER MESSAGE</span>
-            <h2>Message Details</h2>
-          </div>
+        <div class="pagination-controls">
+          <button
+            type="button"
+            (click)="previousPage()"
+            [disabled]="page <= 1 || loading">
+            Previous
+          </button>
 
           <button
-            class="modal-close"
-            (click)="closeModal()"
-          >
-            ×
+            type="button"
+            (click)="nextPage()"
+            [disabled]="page >= totalPages || loading">
+            Next
           </button>
         </div>
 
-        <!-- Customer Details -->
-        <div class="customer-details">
+      </div>
+    }
 
-          <div class="customer-avatar customer-avatar--large">
-            {{ message.name.charAt(0).toUpperCase() }}
-          </div>
+  </section>
 
-          <div class="customer-details__info">
-            <h3>{{ message.name }}</h3>
-            <p>{{ message.email }}</p>
-            <p>{{ message.phone }}</p>
-          </div>
+</div>
 
+@if (showDetailsModal && selectedMessage) {
+  <div class="modal-overlay" (click)="closeModal()">
+
+    <div
+      class="message-modal"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">MESSAGE DETAILS</span>
+          <h2>Contact Message</h2>
         </div>
 
-        <!-- Message Information -->
-        <div class="message-information">
+        <button
+          type="button"
+          class="modal-close"
+          (click)="closeModal()">
+          ×
+        </button>
+      </div>
 
+      @if (detailsLoading) {
+        <div class="empty-state">
+          <p>Loading message details...</p>
+        </div>
+      } @else if (detailsErrorMessage) {
+        <div class="error-state">
+          {{ detailsErrorMessage }}
+        </div>
+      } @else {
+
+        <div class="customer-details">
+          <div class="customer-details__info">
+            <div class="customer-avatar">
+              {{ selectedMessage.name.charAt(0).toUpperCase() }}
+            </div>
+
+            <div>
+              <h3>{{ selectedMessage.name }}</h3>
+              <p>{{ selectedMessage.email }}</p>
+              <small>Username: {{ selectedMessage.username }}</small>
+              <small>User ID: {{ selectedMessage.userId }}</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-information">
           <div class="information-item">
             <span>Subject</span>
-            <strong>{{ message.subject }}</strong>
+            <strong>{{ selectedMessage.subject }}</strong>
           </div>
 
           <div class="information-item">
-            <span>Received Date</span>
-            <strong>{{ message.date | date:'medium' }}</strong>
+            <span>Received</span>
+            <strong>
+              {{ selectedMessage.createdDate | date:'medium' }}
+            </strong>
           </div>
 
           <div class="information-item">
-            <span>Status</span>
-
-            <span
-              class="status-badge"
-              [class.unread]="message.status === 'Unread'"
-              [class.read]="message.status === 'Read'"
-              [class.replied]="message.status === 'Replied'"
-            >
-              {{ message.status }}
-            </span>
+            <span>Created By</span>
+            <strong>{{ selectedMessage.createdBy || 'N/A' }}</strong>
           </div>
 
+          <div class="information-item">
+            <span>Last Updated</span>
+            <strong>
+              {{
+                selectedMessage.updatedDate
+                  ? (selectedMessage.updatedDate | date:'medium')
+                  : 'Not Updated'
+              }}
+            </strong>
+          </div>
         </div>
 
-        <!-- Message Content -->
         <div class="message-content">
-          <h3>Message Content</h3>
-          <p>{{ message.message }}</p>
-        </div>
-
-        <!-- Status Actions -->
-        <div class="status-actions">
-          <span>Update Message Status</span>
-
-          <div>
-            <button
-              [class.selected]="message.status === 'Unread'"
-              (click)="updateStatus(message, 'Unread')"
-            >
-              Unread
-            </button>
-
-            <button
-              [class.selected]="message.status === 'Read'"
-              (click)="updateStatus(message, 'Read')"
-            >
-              Read
-            </button>
-
-            <button
-              [class.selected]="message.status === 'Replied'"
-              (click)="updateStatus(message, 'Replied')"
-            >
-              Replied
-            </button>
-          </div>
+          <h3>Message</h3>
+          <p>{{ selectedMessage.message }}</p>
         </div>
 
         <div class="modal-footer">
-          <button class="close-btn" (click)="closeModal()">
+          <button
+            type="button"
+            class="delete-btn"
+            (click)="deleteMessage(selectedMessage)">
+            Delete Message
+          </button>
+
+          <button
+            type="button"
+            class="close-btn"
+            (click)="closeModal()">
             Close
           </button>
         </div>
-
-      </div>
+      }
 
     </div>
-  }
-
-</section>
+  </div>
+}
