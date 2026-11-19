@@ -13,6 +13,11 @@ import {
   Product as ApiProduct,
 } from '../../../../core/services/product.service';
 
+import {
+  ProductDetailsService,
+  ProductDetails as ApiProductDetails,
+} from '../../../../core/services/product-details.service';
+
 interface Product {
   id: number;
   name: string;
@@ -40,6 +45,7 @@ export class ProductDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private cartService = inject(CartService);
   private productService = inject(ProductService);
+  private productDetailsService = inject(ProductDetailsService);
   private cdr = inject(ChangeDetectorRef);
 
   notification = '';
@@ -50,22 +56,20 @@ export class ProductDetails implements OnInit {
   errorMessage = '';
 
   product: Product | null = null;
+  productDetails: ApiProductDetails | null = null;
   relatedProducts: Product[] = [];
 
   private readonly fallbackImage =
     'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=900&auto=format&fit=crop&q=85';
 
   ngOnInit(): void {
-    console.log('PRODUCT DETAILS COMPONENT LOADED');
-
     this.route.paramMap.subscribe(params => {
       const id = Number(params.get('id'));
-
-      console.log('PRODUCT ID:', id);
 
       if (!id || Number.isNaN(id)) {
         this.errorMessage = 'Invalid product ID.';
         this.product = null;
+        this.productDetails = null;
         this.loading = false;
         this.cdr.detectChanges();
         return;
@@ -76,20 +80,17 @@ export class ProductDetails implements OnInit {
   }
 
   private loadProduct(id: number): void {
-    console.log('DETAILS: Loading product ID:', id);
-
     this.loading = true;
     this.errorMessage = '';
     this.notification = '';
     this.product = null;
+    this.productDetails = null;
     this.relatedProducts = [];
     this.quantity = 1;
     this.selectedSize = 'Regular';
 
     this.productService.getProductById(id).subscribe({
       next: response => {
-        console.log('DETAILS: API Response:', response);
-
         if (!response.success || !response.data) {
           this.errorMessage = 'Product not found.';
           this.loading = false;
@@ -100,21 +101,34 @@ export class ProductDetails implements OnInit {
         this.product = this.mapProduct(response.data);
         this.loading = false;
 
-        console.log('DETAILS: Mapped Product:', this.product);
-        console.log('DETAILS: Loading State:', this.loading);
-
         this.cdr.detectChanges();
 
+        this.loadProductDetails(id);
         this.loadRelatedProducts();
       },
 
-      error: error => {
-        console.error('DETAILS: API Error:', error);
-
+      error: () => {
         this.errorMessage =
           'Unable to load this product. Please try again later.';
 
         this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private loadProductDetails(productId: number): void {
+    this.productDetailsService.getByProductId(productId).subscribe({
+      next: response => {
+        this.productDetails =
+          response.success ? response.data : null;
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // Product details are optional.
+        // Keep the main product visible when no details exist.
+        this.productDetails = null;
         this.cdr.detectChanges();
       },
     });
@@ -159,16 +173,10 @@ export class ProductDetails implements OnInit {
           .slice(0, 3)
           .map(item => this.mapProduct(item));
 
-        console.log(
-          'DETAILS: Related Products:',
-          this.relatedProducts
-        );
-
         this.cdr.detectChanges();
       },
 
-      error: error => {
-        console.error('Failed to load related products:', error);
+      error: () => {
         this.relatedProducts = [];
         this.cdr.detectChanges();
       },
