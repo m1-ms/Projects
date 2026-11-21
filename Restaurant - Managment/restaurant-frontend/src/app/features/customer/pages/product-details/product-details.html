@@ -21,6 +21,7 @@
   <section class="product-details-page">
     <div class="container">
 
+      <!-- Breadcrumb -->
       <nav class="breadcrumb">
         <a routerLink="/">Home</a>
         <span>/</span>
@@ -29,6 +30,7 @@
         <span class="current">{{ product.name }}</span>
       </nav>
 
+      <!-- Main Product -->
       <div class="product-details-grid">
 
         <div class="product-image-wrapper">
@@ -71,6 +73,7 @@
 
           <div class="product-divider"></div>
 
+          <!-- Product Size -->
           <div class="option-section">
             <h3>Product Size</h3>
 
@@ -88,6 +91,7 @@
             </div>
           </div>
 
+          <!-- Quantity -->
           <div class="quantity-section">
             <h3>Quantity</h3>
 
@@ -114,11 +118,13 @@
             </div>
           </div>
 
+          <!-- Total Price -->
           <div class="total-price">
             <span>Total Price</span>
             <strong>${{ totalPrice.toFixed(2) }}</strong>
           </div>
 
+          <!-- Add To Cart -->
           <button
             type="button"
             class="add-to-cart-btn"
@@ -149,6 +155,83 @@
         </div>
       </div>
 
+      <!-- Product Additional Information -->
+      @if (productDetails) {
+        <section class="ingredients-section">
+
+          <div class="section-heading">
+            <span>PRODUCT INFORMATION</span>
+            <h2>Discover What's Inside</h2>
+            <p>
+              Learn more about the ingredients and nutritional
+              information of {{ product.name }}.
+            </p>
+          </div>
+
+          <!-- Product Facts -->
+          <div class="product-facts">
+
+            @if (productDetails.calories !== null) {
+              <div class="product-fact-card">
+                <span class="fact-icon">🔥</span>
+                <div>
+                  <span class="fact-label">Calories</span>
+                  <strong>{{ productDetails.calories }} kcal</strong>
+                </div>
+              </div>
+            }
+
+            @if (productDetails.preparationTimeMinutes !== null) {
+              <div class="product-fact-card">
+                <span class="fact-icon">◷</span>
+                <div>
+                  <span class="fact-label">Preparation Time</span>
+                  <strong>
+                    {{ productDetails.preparationTimeMinutes }} minutes
+                  </strong>
+                </div>
+              </div>
+            }
+
+            @if (productDetails.servingSize) {
+              <div class="product-fact-card">
+                <span class="fact-icon">🍽</span>
+                <div>
+                  <span class="fact-label">Serving Size</span>
+                  <strong>{{ productDetails.servingSize }}</strong>
+                </div>
+              </div>
+            }
+
+          </div>
+
+          <!-- Ingredients -->
+          <div class="ingredients-content">
+            <div class="section-heading">
+              <span>FRESH & QUALITY</span>
+              <h2>Ingredients</h2>
+            </div>
+
+            @if (ingredientList.length > 0) {
+              <div class="ingredients-grid">
+                @for (ingredient of ingredientList; track ingredient) {
+                  <div class="ingredient-card">
+                    <span class="ingredient-icon">✦</span>
+                    <span>{{ ingredient }}</span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="no-ingredients">
+                Ingredient information is currently unavailable.
+              </p>
+            }
+          </div>
+
+        </section>
+      }
+
+      <!-- Related Products -->
       @if (relatedProducts.length > 0) {
         <section class="related-products-section">
 

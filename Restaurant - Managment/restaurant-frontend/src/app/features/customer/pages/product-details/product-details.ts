@@ -1,3 +1,4 @@
+
 import {
   Component,
   OnInit,
@@ -125,6 +126,7 @@ export class ProductDetails implements OnInit {
 
         this.cdr.detectChanges();
       },
+
       error: () => {
         // Product details are optional.
         // Keep the main product visible when no details exist.
@@ -181,6 +183,20 @@ export class ProductDetails implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  // Convert the API ingredients string into a displayable list.
+  get ingredientList(): string[] {
+    const ingredients = this.productDetails?.ingredients;
+
+    if (!ingredients) {
+      return [];
+    }
+
+    return ingredients
+      .split(',')
+      .map(ingredient => ingredient.trim())
+      .filter(ingredient => ingredient.length > 0);
   }
 
   get selectedSizePrice(): number {
