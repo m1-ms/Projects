@@ -1,12 +1,19 @@
-
 import {
   Component,
+  DestroyRef,
   inject,
   OnInit,
-  ChangeDetectorRef
+  ChangeDetectorRef,
 } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import {
+  debounceTime,
+  Subject,
+  Subscription,
+} from 'rxjs';
 
 import { CartService } from '../../../../core/services/cart.service';
 
@@ -20,6 +27,11 @@ import {
   Product,
 } from '../../../../core/services/product.service';
 
+import {
+  Category,
+  CategoryService,
+} from '../../../../core/services/category.service';
+
 export interface MenuProduct {
   id: number;
   name: string;
@@ -29,6 +41,11 @@ export interface MenuProduct {
   image: string;
   rating: number;
   badge?: string;
+}
+
+export interface MenuCategory {
+  id: number | null;
+  name: string;
 }
 
 @Component({
@@ -41,68 +58,137 @@ export class Menu implements OnInit {
   private cartService = inject(CartService);
   private favoritesService = inject(FavoritesService);
   private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+
+  private searchSubject = new Subject<void>();
+  private productsRequest?: Subscription;
 
   searchTerm = '';
   selectedCategory = 'All';
+  selectedCategoryId: number | null = null;
 
   loading = false;
   errorMessage = '';
 
-  categories: string[] = ['All'];
+  currentPage = 1;
+  pageSize = 8;
+  totalPages = 0;
+  totalElements = 0;
+
+  categories: MenuCategory[] = [
+    { id: null, name: 'All' },
+  ];
+
   products: MenuProduct[] = [];
 
   private readonly fallbackImage =
     'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=700&auto=format&fit=crop&q=85';
 
   ngOnInit(): void {
-    this.loadProducts();
+    this.searchSubject
+      .pipe(
+        debounceTime(350),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.loadProducts(1);
+      });
+
+    this.loadCategories();
+    this.loadProducts(1);
   }
 
-  loadProducts(): void {
+  loadCategories(): void {
+    this.categoryService
+      .getCategories(1, 50)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          const backendCategories: Category[] =
+            response.data?.content ?? [];
+
+          this.categories = [
+            { id: null, name: 'All' },
+            ...backendCategories
+              .filter(
+                category => category.name.trim().toLowerCase() !== 'all'
+              )
+              .map(category => ({
+                id: category.id,
+                name: category.name,
+              })),
+          ];
+
+          this.cdr.detectChanges();
+        },
+
+        error: error => {
+          console.error('Failed to load categories:', error);
+
+          this.categories = [
+            { id: null, name: 'All' },
+          ];
+
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  loadProducts(page = 1): void {
+    this.productsRequest?.unsubscribe();
+
+    this.currentPage = page;
     this.loading = true;
     this.errorMessage = '';
 
-    this.productService.getProducts().subscribe({
-      next: (response) => {
-        console.log('API Response:', response);
+    this.productsRequest = this.productService
+      .searchProducts(
+        this.searchTerm,
+        this.selectedCategoryId,
+        this.currentPage,
+        this.pageSize,
+      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          const pageData = response.data;
 
-        const backendProducts = response.data?.content ?? [];
+          this.products = (pageData.content ?? []).map(
+            (product: Product) => this.mapProduct(product),
+          );
 
-        console.log('Backend Products:', backendProducts);
+          this.currentPage = pageData.page;
+          this.totalElements = pageData.totalElements;
+          this.totalPages = pageData.totalPages;
 
-        this.products = backendProducts.map((product: Product) =>
-          this.mapProduct(product)
-        );
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
 
-        console.log('Mapped Products:', this.products);
+        error: error => {
+          // The backend returns 404 when the search has no results.
+          if (error.status === 404) {
+            this.products = [];
+            this.totalElements = 0;
+            this.totalPages = 0;
+            this.currentPage = 1;
+          } else {
+            console.error('Failed to load products:', error);
 
-        const uniqueCategories = [
-          ...new Set(
-            this.products
-              .map(product => product.category)
-              .filter(category => !!category)
-          ),
-        ];
+            this.products = [];
+            this.totalElements = 0;
+            this.totalPages = 0;
 
-        this.categories = ['All', ...uniqueCategories];
+            this.errorMessage =
+              'Unable to load products. Please try again later.';
+          }
 
-        console.log('Categories:', this.categories);
-
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-
-      error: (error) => {
-        console.error('Failed to load products:', error);
-
-        this.errorMessage =
-          'Unable to load products. Please try again later.';
-
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-    });
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   private mapProduct(product: Product): MenuProduct {
@@ -117,34 +203,72 @@ export class Menu implements OnInit {
     };
   }
 
-  get filteredProducts(): MenuProduct[] {
-    return this.products.filter((product) => {
-      const matchesCategory =
-        this.selectedCategory === 'All' ||
-        product.category === this.selectedCategory;
+  get displayedRangeStart(): number {
+    if (this.totalElements === 0) {
+      return 0;
+    }
 
-      const search = this.searchTerm.trim().toLowerCase();
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
 
-      const matchesSearch =
-        !search ||
-        product.name.toLowerCase().includes(search) ||
-        product.description.toLowerCase().includes(search) ||
-        product.category.toLowerCase().includes(search);
+  get displayedRangeEnd(): number {
+    return Math.min(
+      this.currentPage * this.pageSize,
+      this.totalElements,
+    );
+  }
 
-      return matchesCategory && matchesSearch;
-    });
+  get visiblePages(): number[] {
+    if (this.totalPages === 0) {
+      return [];
+    }
+
+    let start = Math.max(1, this.currentPage - 2);
+    let end = Math.min(this.totalPages, start + 4);
+
+    start = Math.max(1, end - 4);
+
+    return Array.from(
+      { length: end - start + 1 },
+      (_, index) => start + index,
+    );
   }
 
   get cartCount(): number {
     return this.cartService.totalItems();
   }
 
-  selectCategory(category: string): void {
-    this.selectedCategory = category;
+  selectCategory(category: MenuCategory): void {
+    this.selectedCategory = category.name;
+    this.selectedCategoryId = category.id;
+
+    this.loadProducts(1);
   }
 
   onSearch(value: string): void {
     this.searchTerm = value;
+    this.searchSubject.next();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.selectedCategory = 'All';
+    this.selectedCategoryId = null;
+
+    this.loadProducts(1);
+  }
+
+  goToPage(page: number): void {
+    if (
+      page < 1 ||
+      page > this.totalPages ||
+      page === this.currentPage ||
+      this.loading
+    ) {
+      return;
+    }
+
+    this.loadProducts(page);
   }
 
   getProductQuantity(productId: number): number {

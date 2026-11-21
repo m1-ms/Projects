@@ -1,3 +1,8 @@
+
+:host {
+  display: block;
+}
+
 .menu-page {
   min-height: 100vh;
   background: var(--color-background, #fbf5ee);
@@ -371,6 +376,68 @@
   cursor: pointer;
 }
 
+// Pagination
+
+.menu-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 45px;
+}
+
+.menu-pagination__pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.menu-pagination__page,
+.menu-pagination__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e8dfd5;
+  border-radius: 8px;
+  background: #fff;
+  color: #5d5751;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-pagination__arrow {
+  gap: 7px;
+}
+
+.menu-pagination__page:hover:not(:disabled),
+.menu-pagination__arrow:hover:not(:disabled) {
+  border-color: #e3242b;
+  color: #e3242b;
+}
+
+.menu-pagination__page.active {
+  border-color: #e3242b;
+  background: #e3242b;
+  color: #fff;
+}
+
+.menu-pagination__page:disabled,
+.menu-pagination__arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+// Responsive
+
 @media (max-width: 1000px) {
   .menu-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -412,5 +479,20 @@
 
   .menu-results__heading h2 {
     font-size: 26px;
+  }
+
+  .menu-pagination {
+    gap: 8px;
+  }
+
+  .menu-pagination__arrow {
+    min-width: 40px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .menu-pagination__page {
+    min-width: 35px;
+    height: 35px;
   }
 }

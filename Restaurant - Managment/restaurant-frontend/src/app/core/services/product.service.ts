@@ -1,6 +1,5 @@
-
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { API_CONFIG } from '../api.config';
@@ -23,6 +22,8 @@ export interface ProductPage {
   size: number;
   totalElements: number;
   totalPages: number;
+  first?: boolean;
+  last?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -32,7 +33,7 @@ export interface ApiResponse<T> {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductService {
   private http = inject(HttpClient);
@@ -42,6 +43,32 @@ export class ProductService {
 
   getProducts(): Observable<ApiResponse<ProductPage>> {
     return this.http.get<ApiResponse<ProductPage>>(this.apiUrl);
+  }
+
+  searchProducts(
+    key: string,
+    categoryId: number | null,
+    page: number,
+    size: number,
+  ): Observable<ApiResponse<ProductPage>> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    const normalizedKey = key.trim();
+
+    if (normalizedKey) {
+      params = params.set('key', normalizedKey);
+    }
+
+    if (categoryId !== null) {
+      params = params.set('categoryId', categoryId);
+    }
+
+    return this.http.get<ApiResponse<ProductPage>>(
+      `${this.apiUrl}/search`,
+      { params },
+    );
   }
 
   getProductById(id: number): Observable<ApiResponse<Product>> {

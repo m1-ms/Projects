@@ -1,9 +1,12 @@
-
 <section class="menu-page">
   <div class="menu-hero">
     <div class="menu-hero__content">
       <span class="menu-hero__eyebrow">DISCOVER OUR MENU</span>
-      <h1>Explore Our <span>Delicious</span> Menu</h1>
+
+      <h1>
+        Explore Our <span>Delicious</span> Menu
+      </h1>
+
       <p>
         Discover a world of flavors, freshly prepared with passion
         and the finest ingredients.
@@ -12,9 +15,12 @@
   </div>
 
   <div class="menu-container">
+
+    <!-- Search and Cart -->
     <div class="menu-toolbar">
       <div class="menu-search">
         <span class="menu-search__icon">⌕</span>
+
         <input
           type="text"
           placeholder="Search for your favorite dish..."
@@ -29,25 +35,29 @@
       </a>
     </div>
 
-    @if (!loading && !errorMessage) {
+    <!-- Categories -->
+    @if (!errorMessage) {
       <div class="menu-categories">
-        @for (category of categories; track category) {
+        @for (category of categories; track category.id ?? 'all') {
           <button
             type="button"
             class="category-btn"
-            [class.active]="selectedCategory === category"
+            [class.active]="selectedCategoryId === category.id"
             (click)="selectCategory(category)"
           >
-            {{ category }}
+            {{ category.name }}
           </button>
         }
       </div>
     }
 
+    <!-- Products -->
     <div class="menu-results">
+
       <div class="menu-results__heading">
         <div>
           <span class="section-eyebrow">OUR SELECTION</span>
+
           <h2>
             {{ selectedCategory === 'All' ? 'All Dishes' : selectedCategory }}
           </h2>
@@ -55,7 +65,12 @@
 
         @if (!loading && !errorMessage) {
           <span class="menu-results__count">
-            {{ filteredProducts.length }} dishes
+            @if (totalElements > 0) {
+              Showing {{ displayedRangeStart }}–{{ displayedRangeEnd }}
+              of {{ totalElements }} dishes
+            } @else {
+              0 dishes
+            }
           </span>
         }
       </div>
@@ -68,21 +83,33 @@
       } @else if (errorMessage) {
         <div class="menu-empty">
           <h3>{{ errorMessage }}</h3>
-          <button type="button" (click)="loadProducts()">
+
+          <button
+            type="button"
+            (click)="loadProducts(currentPage)"
+          >
             Try Again
           </button>
         </div>
-      } @else if (filteredProducts.length > 0) {
+      } @else if (products.length > 0) {
+
         <div class="menu-grid">
-          @for (product of filteredProducts; track product.id) {
+          @for (product of products; track product.id) {
             <article class="menu-card">
+
               <div class="menu-card__image">
                 <a [routerLink]="['/product-details', product.id]">
-                  <img [src]="product.image" [alt]="product.name" />
+                  <img
+                    [src]="product.image"
+                    [alt]="product.name"
+                    loading="lazy"
+                  />
                 </a>
 
                 @if (product.badge) {
-                  <span class="menu-card__badge">{{ product.badge }}</span>
+                  <span class="menu-card__badge">
+                    {{ product.badge }}
+                  </span>
                 }
 
                 <button
@@ -97,8 +124,10 @@
               </div>
 
               <div class="menu-card__content">
+
                 <div class="menu-card__meta">
                   <span>{{ product.category }}</span>
+
                   @if (product.rating > 0) {
                     <span>★ {{ product.rating }}</span>
                   }
@@ -122,6 +151,7 @@
 
                   @if (getProductQuantity(product.id) > 0) {
                     <div class="menu-quantity-control">
+
                       <button
                         type="button"
                         (click)="decreaseQuantity(product.id)"
@@ -131,7 +161,9 @@
                         −
                       </button>
 
-                      <span>{{ getProductQuantity(product.id) }}</span>
+                      <span>
+                        {{ getProductQuantity(product.id) }}
+                      </span>
 
                       <button
                         type="button"
@@ -141,6 +173,7 @@
                       >
                         +
                       </button>
+
                     </div>
                   } @else {
                     <button
@@ -152,24 +185,71 @@
                     </button>
                   }
                 </div>
+
               </div>
             </article>
           }
         </div>
+
+        <!-- Server-side Pagination -->
+        @if (totalPages > 1) {
+          <nav class="menu-pagination" aria-label="Products pagination">
+
+            <button
+              type="button"
+              class="menu-pagination__arrow"
+              [disabled]="currentPage === 1 || loading"
+              (click)="goToPage(currentPage - 1)"
+            >
+              ← Previous
+            </button>
+
+            <div class="menu-pagination__pages">
+              @for (page of visiblePages; track page) {
+                <button
+                  type="button"
+                  class="menu-pagination__page"
+                  [class.active]="currentPage === page"
+                  [attr.aria-current]="currentPage === page ? 'page' : null"
+                  [disabled]="loading"
+                  (click)="goToPage(page)"
+                >
+                  {{ page }}
+                </button>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="menu-pagination__arrow"
+              [disabled]="currentPage === totalPages || loading"
+              (click)="goToPage(currentPage + 1)"
+            >
+              Next →
+            </button>
+
+          </nav>
+        }
+
       } @else {
         <div class="menu-empty">
           <span>⌕</span>
+
           <h3>No dishes found</h3>
-          <p>Try another search term or choose a different category.</p>
+
+          <p>
+            Try another search term or choose a different category.
+          </p>
 
           <button
             type="button"
-            (click)="onSearch(''); selectCategory('All')"
+            (click)="clearFilters()"
           >
             Clear Filters
           </button>
         </div>
       }
+
     </div>
   </div>
 </section>
