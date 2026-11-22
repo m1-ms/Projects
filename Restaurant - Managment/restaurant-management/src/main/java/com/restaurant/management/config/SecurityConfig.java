@@ -94,6 +94,32 @@ public class SecurityConfig {
                                 "/api/contact-info/my"
                         ).hasAnyRole(user, admin)
 
+                        // Reviews
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/reviews"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/reviews"
+                        ).hasAnyRole(user, admin)
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/reviews/my"
+                        ).hasAnyRole(user, admin)
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/reviews/admin"
+                        ).hasRole(admin)
+
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/reviews/*/status"
+                        ).hasRole(admin)
+
                         .requestMatchers("/api/orders/**")
                         .hasAnyRole(user, admin)
 
@@ -139,7 +165,12 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(allowedOrigins);
 
         configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
         ));
 
         configuration.setAllowedHeaders(List.of(
