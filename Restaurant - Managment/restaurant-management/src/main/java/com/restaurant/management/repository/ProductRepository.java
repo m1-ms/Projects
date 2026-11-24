@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+public interface ProductRepository extends JpaRepository<Product, Long>,
+        JpaSpecificationExecutor<Product> {
 
     @Override
     @EntityGraph(attributePaths = "category")
@@ -42,9 +43,15 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                    or lower(p.name) like lower(concat('%', :key, '%'))
                    or lower(p.description) like lower(concat('%', :key, '%')))
             """)
-    Page<Product> search(@Param("categoryId") Long categoryId, @Param("key") String key, Pageable pageable);
+    Page<Product> search(
+            @Param("categoryId") Long categoryId,
+            @Param("key") String key,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = "category")
     List<Product> findTop5ByOrderByIdDesc();
 
+    @EntityGraph(attributePaths = "category")
+    List<Product> findByFeaturedTrueAndActiveTrueOrderByNameAsc();
 }

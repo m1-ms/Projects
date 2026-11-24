@@ -44,94 +44,180 @@ public class ProductController {
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
+
         return ResponseEntity.ok(ApiResponse.success(
-                messages.get("success.retrieved"), productService.getAll(page, size)));
+                messages.get("success.retrieved"),
+                productService.getAll(page, size)
+        ));
+    }
+
+    @GetMapping("/featured")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getFeaturedProducts() {
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                productService.getFeaturedProducts()
+        ));
     }
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> search(
-            @RequestParam(required = false) @Size(max = 100, message = "{product.key.size}") String key,
-            @RequestParam(required = false) @Positive(message = "{category.id.invalid}") Long categoryId,
+            @RequestParam(required = false)
+            @Size(max = 100, message = "{product.key.size}") String key,
+
+            @RequestParam(required = false)
+            @Positive(message = "{category.id.invalid}") Long categoryId,
+
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
+
         return ResponseEntity.ok(ApiResponse.success(
-                messages.get("success.retrieved"), productService.search(categoryId, key, page, size)));
+                messages.get("success.retrieved"),
+                productService.search(categoryId, key, page, size)
+        ));
     }
 
     @GetMapping("/audit-search")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> auditSearch(
-            @RequestParam(required = false) @Size(max = 100, message = "{product.key.size}") String key,
-            @RequestParam(required = false) @Positive(message = "{category.id.invalid}") Long categoryId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedTo,
-            @RequestParam(required = false) @Size(max = 50, message = "{search.user.size}") String createdBy,
-            @RequestParam(required = false) @Size(max = 50, message = "{search.user.size}") String updatedBy,
+            @RequestParam(required = false)
+            @Size(max = 100, message = "{product.key.size}") String key,
+
+            @RequestParam(required = false)
+            @Positive(message = "{category.id.invalid}") Long categoryId,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedFrom,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedTo,
+
+            @RequestParam(required = false)
+            @Size(max = 50, message = "{search.user.size}") String createdBy,
+
+            @RequestParam(required = false)
+            @Size(max = 50, message = "{search.user.size}") String updatedBy,
+
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
+
         AuditSearchCriteria criteria = new AuditSearchCriteria(
-                createdFrom, createdTo, updatedFrom, updatedTo, createdBy, updatedBy);
+                createdFrom,
+                createdTo,
+                updatedFrom,
+                updatedTo,
+                createdBy,
+                updatedBy
+        );
+
         return ResponseEntity.ok(ApiResponse.success(
                 messages.get("success.retrieved"),
-                productService.auditSearch(criteria, key, categoryId, page, size)));
+                productService.auditSearch(
+                        criteria, key, categoryId, page, size
+                )
+        ));
     }
 
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getByCategory(
-            @PathVariable @Positive(message = "{category.id.invalid}") Long categoryId,
+            @PathVariable
+            @Positive(message = "{category.id.invalid}") Long categoryId,
+
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
+
         return ResponseEntity.ok(ApiResponse.success(
-                messages.get("success.retrieved"), productService.getByCategoryId(categoryId, page, size)));
+                messages.get("success.retrieved"),
+                productService.getByCategoryId(categoryId, page, size)
+        ));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getById(
+            @PathVariable Long id) {
+
         return ResponseEntity.ok(ApiResponse.success(
-                messages.get("success.retrieved"), productService.getById(id)));
+                messages.get("success.retrieved"),
+                productService.getById(id)
+        ));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductResponse>> save(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
-                messages.get("success.created"), productService.save(request)));
+    public ResponseEntity<ApiResponse<ProductResponse>> save(
+            @Valid @RequestBody ProductRequest request) {
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(
+                        messages.get("success.created"),
+                        productService.save(request)
+                )
+        );
     }
 
     @PostMapping("/bulk")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> saveAll(
-            @RequestBody @NotEmpty(message = "{product.list.required}")
+            @RequestBody
+            @NotEmpty(message = "{product.list.required}")
             List<@Valid ProductRequest> requests) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
-                messages.get("success.created"), productService.saveAll(requests)));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(
+                        messages.get("success.created"),
+                        productService.saveAll(requests)
+                )
+        );
     }
 
     @PutMapping
-    public ResponseEntity<ApiResponse<ProductResponse>> update(@Valid @RequestBody ProductUpdateRequest request) {
+    public ResponseEntity<ApiResponse<ProductResponse>> update(
+            @Valid @RequestBody ProductUpdateRequest request) {
+
         return ResponseEntity.ok(ApiResponse.success(
-                messages.get("success.updated"), productService.update(request)));
+                messages.get("success.updated"),
+                productService.update(request)
+        ));
     }
 
     @PutMapping("/bulk")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> updateAll(
-            @RequestBody @NotEmpty(message = "{product.list.required}")
+            @RequestBody
+            @NotEmpty(message = "{product.list.required}")
             List<@Valid ProductUpdateRequest> requests) {
+
         return ResponseEntity.ok(ApiResponse.success(
-                messages.get("success.updated"), productService.updateAll(requests)));
+                messages.get("success.updated"),
+                productService.updateAll(requests)
+        ));
     }
 
     @DeleteMapping
     public ResponseEntity<ApiResponse<Void>> delete(
-            @RequestParam @Positive(message = "{product.id.invalid}") Long id) {
+            @RequestParam
+            @Positive(message = "{product.id.invalid}") Long id) {
+
         productService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success(messages.get("success.deleted"), null));
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.deleted"),
+                null
+        ));
     }
 
     @DeleteMapping("/bulk")
     public ResponseEntity<ApiResponse<Void>> deleteAll(
-            @RequestParam @NotEmpty(message = "{product.ids.required}")
+            @RequestParam
+            @NotEmpty(message = "{product.ids.required}")
             List<@NotNull @Positive(message = "{product.id.invalid}") Long> ids) {
+
         productService.deleteAll(ids);
-        return ResponseEntity.ok(ApiResponse.success(messages.get("success.deleted"), null));
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.deleted"),
+                null
+        ));
     }
 }

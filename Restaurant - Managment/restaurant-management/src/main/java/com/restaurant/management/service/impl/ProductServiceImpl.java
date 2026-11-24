@@ -51,59 +51,114 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'all:' + #page + ':' + #size")
     public PageResponse<ProductResponse> getAll(int page, int size) {
-        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
-        Page<ProductResponse> result = productRepository.findAll(pageable).map(productMapper::toResponse);
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
+        Page<ProductResponse> result = productRepository.findAll(pageable)
+                .map(productMapper::toResponse);
+
         return PageResponse.from(result);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'category:' + #categoryId + ':' + #page + ':' + #size")
-    public PageResponse<ProductResponse> getByCategoryId(Long categoryId, int page, int size) {
-        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+    @Cacheable(cacheNames = CacheNames.PRODUCTS,
+            key = "'category:' + #categoryId + ':' + #page + ':' + #size")
+    public PageResponse<ProductResponse> getByCategoryId(
+            Long categoryId, int page, int size
+    ) {
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
         findCategoryOrThrow(categoryId);
-        Page<ProductResponse> result = productRepository.findByCategoryId(categoryId, pageable)
+
+        Page<ProductResponse> result = productRepository
+                .findByCategoryId(categoryId, pageable)
                 .map(productMapper::toResponse);
+
         if (result.getTotalElements() == 0) {
             throw new EmptyResultException("product.empty");
         }
+
         return PageResponse.from(result);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "'search:' + #categoryId + ':' + #key?.trim()?.toLowerCase() + ':' + #page + ':' + #size")
-    public PageResponse<ProductResponse> search(Long categoryId, String key, int page, int size) {
-        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+    public List<ProductResponse> getFeaturedProducts() {
+        List<Product> products =
+                productRepository.findByFeaturedTrueAndActiveTrueOrderByNameAsc();
+
+        return productMapper.toResponseList(products);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCTS,
+            key = "'search:' + #categoryId + ':' + #key?.trim()?.toLowerCase() + ':' + #page + ':' + #size")
+    public PageResponse<ProductResponse> search(
+            Long categoryId, String key, int page, int size
+    ) {
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
         if (categoryId != null) {
             findCategoryOrThrow(categoryId);
         }
-        String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
-        Page<ProductResponse> result = productRepository.search(categoryId, normalizedKey, pageable)
+
+        String normalizedKey =
+                (key == null || key.isBlank()) ? null : key.trim();
+
+        Page<ProductResponse> result = productRepository
+                .search(categoryId, normalizedKey, pageable)
                 .map(productMapper::toResponse);
+
         if (result.getTotalElements() == 0) {
             throw new EmptyResultException("product.empty");
         }
+
         return PageResponse.from(result);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponse> auditSearch(AuditSearchCriteria criteria, String key, Long categoryId,
-                                                     int page, int size) {
-        Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "id"));
+    public PageResponse<ProductResponse> auditSearch(
+            AuditSearchCriteria criteria,
+            String key,
+            Long categoryId,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
         criteria.validate();
+
         if (categoryId != null) {
             findCategoryOrThrow(categoryId);
         }
-        String normalizedKey = (key == null || key.isBlank()) ? null : key.trim();
-        Specification<Product> specification = AuditSpecifications.<Product>matching(criteria)
-                .and(ProductSpecifications.matching(normalizedKey, categoryId));
-        Page<ProductResponse> result = productRepository.findAll(specification, pageable)
+
+        String normalizedKey =
+                (key == null || key.isBlank()) ? null : key.trim();
+
+        Specification<Product> specification =
+                AuditSpecifications.<Product>matching(criteria)
+                        .and(ProductSpecifications.matching(
+                                normalizedKey, categoryId
+                        ));
+
+        Page<ProductResponse> result = productRepository
+                .findAll(specification, pageable)
                 .map(productMapper::toResponse);
+
         if (result.getTotalElements() == 0) {
             throw new EmptyResultException("product.empty");
         }
+
         return PageResponse.from(result);
     }
 
@@ -116,112 +171,228 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
+    @CacheEvict(
+            cacheNames = {
+                    CacheNames.PRODUCTS,
+                    CacheNames.PRODUCT_DETAILS,
+                    CacheNames.DASHBOARD
+            },
+            allEntries = true
+    )
     public ProductResponse save(ProductRequest request) {
         Category category = findCategoryOrThrow(request.getCategoryId());
-        Product saved = productRepository.save(productMapper.toEntity(request, category));
+
+        Product saved = productRepository.save(
+                productMapper.toEntity(request, category)
+        );
+
         return productMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
+    @CacheEvict(
+            cacheNames = {
+                    CacheNames.PRODUCTS,
+                    CacheNames.PRODUCT_DETAILS,
+                    CacheNames.DASHBOARD
+            },
+            allEntries = true
+    )
     public List<ProductResponse> saveAll(List<ProductRequest> requests) {
         Map<Long, Category> categories = loadCategories(
-                requests.stream().map(ProductRequest::getCategoryId).toList());
+                requests.stream()
+                        .map(ProductRequest::getCategoryId)
+                        .toList()
+        );
+
         List<Product> entities = requests.stream()
-                .map(request -> productMapper.toEntity(request, categories.get(request.getCategoryId())))
+                .map(request -> productMapper.toEntity(
+                        request,
+                        categories.get(request.getCategoryId())
+                ))
                 .toList();
-        return productMapper.toResponseList(productRepository.saveAll(entities));
+
+        return productMapper.toResponseList(
+                productRepository.saveAll(entities)
+        );
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
+    @CacheEvict(
+            cacheNames = {
+                    CacheNames.PRODUCTS,
+                    CacheNames.PRODUCT_DETAILS,
+                    CacheNames.DASHBOARD
+            },
+            allEntries = true
+    )
     public ProductResponse update(ProductUpdateRequest request) {
         Product product = findOrThrow(request.getId());
         Category category = findCategoryOrThrow(request.getCategoryId());
+
         productMapper.updateEntity(product, request, category);
-        return productMapper.toResponse(productRepository.save(product));
+
+        return productMapper.toResponse(
+                productRepository.save(product)
+        );
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
-    public List<ProductResponse> updateAll(List<ProductUpdateRequest> requests) {
+    @CacheEvict(
+            cacheNames = {
+                    CacheNames.PRODUCTS,
+                    CacheNames.PRODUCT_DETAILS,
+                    CacheNames.DASHBOARD
+            },
+            allEntries = true
+    )
+    public List<ProductResponse> updateAll(
+            List<ProductUpdateRequest> requests
+    ) {
         Set<Long> seenIds = new HashSet<>();
+
         for (ProductUpdateRequest request : requests) {
             if (!seenIds.add(request.getId())) {
-                throw new InvalidRequestException("product.duplicate.id", String.valueOf(request.getId()));
+                throw new InvalidRequestException(
+                        "product.duplicate.id",
+                        String.valueOf(request.getId())
+                );
             }
         }
+
         Map<Long, Product> products = loadProducts(seenIds);
+
         Map<Long, Category> categories = loadCategories(
-                requests.stream().map(ProductUpdateRequest::getCategoryId).toList());
+                requests.stream()
+                        .map(ProductUpdateRequest::getCategoryId)
+                        .toList()
+        );
 
         List<Product> updated = new ArrayList<>();
+
         for (ProductUpdateRequest request : requests) {
             Product product = products.get(request.getId());
-            productMapper.updateEntity(product, request, categories.get(request.getCategoryId()));
+
+            productMapper.updateEntity(
+                    product,
+                    request,
+                    categories.get(request.getCategoryId())
+            );
+
             updated.add(product);
         }
-        return productMapper.toResponseList(productRepository.saveAll(updated));
+
+        return productMapper.toResponseList(
+                productRepository.saveAll(updated)
+        );
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
+    @CacheEvict(
+            cacheNames = {
+                    CacheNames.PRODUCTS,
+                    CacheNames.PRODUCT_DETAILS,
+                    CacheNames.DASHBOARD
+            },
+            allEntries = true
+    )
     public void delete(Long id) {
         Product product = findOrThrow(id);
+
         assertNotOrdered(product);
+
         productRepository.delete(product);
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {CacheNames.PRODUCTS, CacheNames.PRODUCT_DETAILS, CacheNames.DASHBOARD}, allEntries = true)
+    @CacheEvict(
+            cacheNames = {
+                    CacheNames.PRODUCTS,
+                    CacheNames.PRODUCT_DETAILS,
+                    CacheNames.DASHBOARD
+            },
+            allEntries = true
+    )
     public void deleteAll(List<Long> ids) {
-        Map<Long, Product> products = loadProducts(new HashSet<>(ids));
+        Map<Long, Product> products =
+                loadProducts(new HashSet<>(ids));
+
         products.values().forEach(this::assertNotOrdered);
+
         productRepository.deleteAll(products.values());
     }
 
     private Product findOrThrow(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("product.notfound", String.valueOf(id)));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "product.notfound",
+                        String.valueOf(id)
+                ));
     }
 
     private Category findCategoryOrThrow(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("category.notfound", String.valueOf(id)));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "category.notfound",
+                        String.valueOf(id)
+                ));
     }
 
     private void assertNotOrdered(Product product) {
         if (orderRepository.existsByProductsId(product.getId())) {
-            throw new ResourceInUseException("product.in.use", product.getName());
+            throw new ResourceInUseException(
+                    "product.in.use",
+                    product.getName()
+            );
         }
     }
 
     private Map<Long, Category> loadCategories(List<Long> ids) {
         Set<Long> distinctIds = new HashSet<>(ids);
-        Map<Long, Category> found = categoryRepository.findAllById(distinctIds).stream()
-                .collect(Collectors.toMap(Category::getId, Function.identity()));
+
+        Map<Long, Category> found = categoryRepository
+                .findAllById(distinctIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Category::getId,
+                        Function.identity()
+                ));
+
         for (Long id : distinctIds) {
             if (!found.containsKey(id)) {
-                throw new ResourceNotFoundException("category.notfound", String.valueOf(id));
+                throw new ResourceNotFoundException(
+                        "category.notfound",
+                        String.valueOf(id)
+                );
             }
         }
+
         return found;
     }
 
     private Map<Long, Product> loadProducts(Set<Long> ids) {
-        Map<Long, Product> found = productRepository.findAllById(ids).stream()
-                .collect(Collectors.toMap(Product::getId, Function.identity()));
+        Map<Long, Product> found = productRepository
+                .findAllById(ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        Product::getId,
+                        Function.identity()
+                ));
+
         for (Long id : ids) {
             if (!found.containsKey(id)) {
-                throw new ResourceNotFoundException("product.notfound", String.valueOf(id));
+                throw new ResourceNotFoundException(
+                        "product.notfound",
+                        String.valueOf(id)
+                );
             }
         }
+
         return found;
     }
 }

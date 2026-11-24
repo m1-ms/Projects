@@ -1,3 +1,4 @@
+
 package com.restaurant.management.mapper;
 
 import com.restaurant.management.dto.request.ProductRequest;
@@ -18,12 +19,34 @@ public class ProductMapper {
         return product;
     }
 
-    public void updateEntity(Product product, ProductRequest request, Category category) {
+    public void updateEntity(
+            Product product,
+            ProductRequest request,
+            Category category
+    ) {
         product.setName(request.getName().trim());
-        product.setImagePath(isBlank(request.getImagePath()) ? null : request.getImagePath().trim());
+
+        product.setImagePath(
+                isBlank(request.getImagePath())
+                        ? null
+                        : request.getImagePath().trim()
+        );
+
         product.setDescription(request.getDescription().trim());
-        product.setPrice(request.getPrice().setScale(2, RoundingMode.HALF_UP));
+
+        product.setPrice(
+                request.getPrice().setScale(2, RoundingMode.HALF_UP)
+        );
+
         product.setCategory(category);
+
+        if (request.getFeatured() != null) {
+            product.setFeatured(request.getFeatured());
+        }
+
+        if (request.getActive() != null) {
+            product.setActive(request.getActive());
+        }
     }
 
     public ProductResponse toResponse(Product product) {
@@ -35,6 +58,8 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
+                .featured(product.isFeatured())
+                .active(product.isActive())
                 .createdDate(product.getCreatedDate())
                 .updatedDate(product.getUpdatedDate())
                 .createdBy(product.getCreatedBy())
@@ -43,7 +68,9 @@ public class ProductMapper {
     }
 
     public List<ProductResponse> toResponseList(List<Product> products) {
-        return products.stream().map(this::toResponse).toList();
+        return products.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private boolean isBlank(String value) {

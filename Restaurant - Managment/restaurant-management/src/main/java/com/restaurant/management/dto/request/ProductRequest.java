@@ -1,3 +1,4 @@
+
 package com.restaurant.management.dto.request;
 
 import jakarta.validation.constraints.Digits;
@@ -37,4 +38,8 @@ public class ProductRequest {
     @NotNull(message = "{product.category.required}")
     @Positive(message = "{product.category.invalid}")
     private Long categoryId;
+
+    private Boolean featured;
+
+    private Boolean active;
 }

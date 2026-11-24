@@ -24,4 +24,6 @@ public class ProductResponse implements Serializable {
     private final LocalDateTime updatedDate;
     private final String createdBy;
     private final String updatedBy;
+    private boolean featured;
+    private boolean active;
 }

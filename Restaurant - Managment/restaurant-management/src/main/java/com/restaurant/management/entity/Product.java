@@ -1,3 +1,4 @@
+
 package com.restaurant.management.entity;
 
 import jakarta.persistence.CascadeType;
@@ -39,6 +40,12 @@ public class Product extends BaseAuditEntity {
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "is_featured", nullable = false)
+    private boolean featured = false;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)

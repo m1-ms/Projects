@@ -14,6 +14,8 @@ public interface ProductService {
 
     PageResponse<ProductResponse> getByCategoryId(Long categoryId, int page, int size);
 
+    List<ProductResponse> getFeaturedProducts();
+
     ProductResponse getById(Long id);
 
     ProductResponse save(ProductRequest request);
@@ -30,5 +32,11 @@ public interface ProductService {
 
     PageResponse<ProductResponse> search(Long categoryId, String key, int page, int size);
 
-    PageResponse<ProductResponse> auditSearch(AuditSearchCriteria criteria, String key, Long categoryId, int page, int size);
+    PageResponse<ProductResponse> auditSearch(
+            AuditSearchCriteria criteria,
+            String key,
+            Long categoryId,
+            int page,
+            int size
+    );
 }
