@@ -1,3 +1,4 @@
+
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -47,6 +48,35 @@ export class ProductService {
     return this.http.get<ApiResponse<ProductPage>>(this.apiUrl);
   }
 
+  getActiveProducts(
+    page: number = 1,
+    size: number = 10,
+  ): Observable<ApiResponse<ProductPage>> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    return this.http.get<ApiResponse<ProductPage>>(
+      `${this.apiUrl}/active`,
+      { params },
+    );
+  }
+
+  getActiveProductsByCategory(
+    categoryId: number,
+    page: number = 1,
+    size: number = 10,
+  ): Observable<ApiResponse<ProductPage>> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    return this.http.get<ApiResponse<ProductPage>>(
+      `${this.apiUrl}/active/category/${categoryId}`,
+      { params },
+    );
+  }
+
   getFeaturedProducts(): Observable<ApiResponse<Product[]>> {
     return this.http.get<ApiResponse<Product[]>>(
       `${this.apiUrl}/featured`,
@@ -79,7 +109,39 @@ export class ProductService {
     );
   }
 
+  searchActiveProducts(
+    key: string,
+    categoryId: number | null,
+    page: number,
+    size: number,
+  ): Observable<ApiResponse<ProductPage>> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    const normalizedKey = key.trim();
+
+    if (normalizedKey) {
+      params = params.set('key', normalizedKey);
+    }
+
+    if (categoryId !== null) {
+      params = params.set('categoryId', categoryId);
+    }
+
+    return this.http.get<ApiResponse<ProductPage>>(
+      `${this.apiUrl}/active/search`,
+      { params },
+    );
+  }
+
   getProductById(id: number): Observable<ApiResponse<Product>> {
     return this.http.get<ApiResponse<Product>>(`${this.apiUrl}/${id}`);
+  }
+
+  getActiveProductById(id: number): Observable<ApiResponse<Product>> {
+    return this.http.get<ApiResponse<Product>>(
+      `${this.apiUrl}/active/${id}`,
+    );
   }
 }

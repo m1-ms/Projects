@@ -1,3 +1,4 @@
+
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -5,11 +6,15 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import {
   Observable,
   catchError,
+  concatMap,
   distinctUntilChanged,
   finalize,
+  from,
   map,
   of,
   switchMap,
+  tap,
+  toArray,
 } from 'rxjs';
 
 import { API_CONFIG } from '../api.config';
@@ -70,6 +75,7 @@ export class CartService {
   private readonly authService = inject(AuthService);
 
   private readonly cartUrl = `${API_CONFIG.baseUrl}/cart`;
+  private readonly guestCartKey = 'storm_guest_cart';
 
   private readonly itemsSignal = signal<CartItem[]>([]);
   private readonly loadingSignal = signal(false);
@@ -104,14 +110,13 @@ export class CartService {
           if (!user) {
             this.loadingSignal.set(false);
             this.errorSignal.set('');
-
-            return of(this.emptyCart());
+            return of(this.guestCart());
           }
 
           this.loadingSignal.set(true);
           this.errorSignal.set('');
 
-          return this.fetchCart().pipe(
+          return this.syncGuestCart().pipe(
             catchError(error => {
               this.errorSignal.set(this.getErrorMessage(error));
               return of(this.emptyCart());
@@ -130,8 +135,12 @@ export class CartService {
     quantity = 1,
     selectedSize?: string,
   ): void {
-    if (!this.authService.isLoggedIn()) {
-      this.errorSignal.set('Please login before adding products to your cart.');
+    const pendingGuestItem = this.readGuestItems().find(item =>
+      this.isSameLine(item, product.id, selectedSize),
+    );
+
+    if (!this.authService.isLoggedIn() || pendingGuestItem) {
+      this.addGuestItem(product, quantity, selectedSize);
       return;
     }
 
@@ -154,6 +163,11 @@ export class CartService {
       return;
     }
 
+    if (!this.authService.isLoggedIn() || item.cartItemId === 0) {
+      this.updateGuestQuantity(item, item.quantity + 1);
+      return;
+    }
+
     this.updateQuantity(item, item.quantity + 1);
   }
 
@@ -161,6 +175,11 @@ export class CartService {
     const item = this.findCartItem(id, selectedSize);
 
     if (!item || item.quantity <= 1) {
+      return;
+    }
+
+    if (!this.authService.isLoggedIn() || item.cartItemId === 0) {
+      this.updateGuestQuantity(item, item.quantity - 1);
       return;
     }
 
@@ -174,6 +193,11 @@ export class CartService {
       return;
     }
 
+    if (!this.authService.isLoggedIn() || item.cartItemId === 0) {
+      this.removeGuestItem(id, selectedSize);
+      return;
+    }
+
     this.executeCartRequest(
       this.http.delete<CartApiResponse>(
         `${this.cartUrl}/items/${item.cartItemId}`,
@@ -182,6 +206,9 @@ export class CartService {
   }
 
   clearCart(): void {
+    this.storeGuestItems([]);
+    this.errorSignal.set('');
+
     if (!this.authService.isLoggedIn()) {
       this.itemsSignal.set([]);
       return;
@@ -194,6 +221,7 @@ export class CartService {
 
   refreshCart(): void {
     if (!this.authService.isLoggedIn()) {
+      this.applyCart(this.guestCart());
       return;
     }
 
@@ -211,6 +239,263 @@ export class CartService {
       });
   }
 
+  private addGuestItem(
+    product: CartProduct,
+    quantity: number,
+    selectedSize?: string,
+  ): void {
+    const items = this.readGuestItems();
+    const normalizedSize = this.normalizeSize(selectedSize);
+    const safeQuantity = Math.min(
+      20,
+      Math.max(1, Math.floor(quantity)),
+    );
+
+    const existingIndex = items.findIndex(item =>
+      this.isSameLine(item, product.id, normalizedSize),
+    );
+
+    if (existingIndex >= 0) {
+      items[existingIndex] = {
+        ...items[existingIndex],
+        quantity: Math.min(
+          20,
+          items[existingIndex].quantity + safeQuantity,
+        ),
+      };
+    } else {
+      items.push({
+        id: product.id,
+        cartItemId: 0,
+        name: product.name,
+        description: product.description,
+        price: Number(product.price),
+        category: product.category,
+        image: product.image,
+        quantity: safeQuantity,
+        selectedSize: normalizedSize ?? undefined,
+      });
+    }
+
+    this.storeGuestItems(items);
+
+    if (this.authService.isLoggedIn()) {
+      const updatedItem = items.find(item =>
+        this.isSameLine(item, product.id, normalizedSize),
+      );
+
+      if (updatedItem) {
+        this.itemsSignal.update(current => [
+          ...current.filter(item =>
+            !(
+              item.cartItemId === 0 &&
+              this.isSameLine(item, product.id, normalizedSize)
+            ),
+          ),
+          updatedItem,
+        ]);
+      }
+    } else {
+      this.applyCart(this.guestCart());
+    }
+  }
+
+  private updateGuestQuantity(
+    item: CartItem,
+    quantity: number,
+  ): void {
+    const updatedItems = this.readGuestItems().map(guestItem =>
+      this.isSameLine(guestItem, item.id, item.selectedSize)
+        ? { ...guestItem, quantity }
+        : guestItem,
+    );
+
+    this.storeGuestItems(updatedItems);
+
+    this.itemsSignal.update(current =>
+      current.map(currentItem =>
+        currentItem.cartItemId === 0 &&
+        this.isSameLine(currentItem, item.id, item.selectedSize)
+          ? { ...currentItem, quantity }
+          : currentItem,
+      ),
+    );
+  }
+
+  private removeGuestItem(
+    productId: number,
+    selectedSize?: string,
+  ): void {
+    const remainingItems = this.readGuestItems().filter(
+      item => !this.isSameLine(item, productId, selectedSize),
+    );
+
+    this.storeGuestItems(remainingItems);
+
+    if (!this.authService.isLoggedIn()) {
+      this.applyCart(this.guestCart());
+      return;
+    }
+
+    this.itemsSignal.update(current =>
+      current.filter(item =>
+        !(
+          item.cartItemId === 0 &&
+          this.isSameLine(item, productId, selectedSize)
+        ),
+      ),
+    );
+  }
+
+  private syncGuestCart(): Observable<CartApiData> {
+    const guestItems = this.readGuestItems();
+
+    if (guestItems.length === 0) {
+      return this.fetchCart();
+    }
+
+    return from(guestItems).pipe(
+      concatMap(item =>
+        this.http.post<CartApiResponse>(
+          `${this.cartUrl}/items`,
+          {
+            productId: item.id,
+            quantity: item.quantity,
+            selectedSize: this.normalizeSize(item.selectedSize),
+          },
+        ).pipe(
+          tap(response => {
+            if (response.success && response.data) {
+              this.removeGuestItemFromStorage(
+                item.id,
+                item.selectedSize,
+              );
+            } else {
+              this.errorSignal.set(
+                response.message || 'Unable to sync a guest cart item.',
+              );
+            }
+          }),
+          catchError(error => {
+            this.errorSignal.set(this.getErrorMessage(error));
+            return of(null);
+          }),
+        ),
+      ),
+      toArray(),
+      switchMap(() => this.fetchCart()),
+    );
+  }
+
+  private removeGuestItemFromStorage(
+    productId: number,
+    selectedSize?: string,
+  ): void {
+    const remainingItems = this.readGuestItems().filter(
+      item => !this.isSameLine(item, productId, selectedSize),
+    );
+
+    this.storeGuestItems(remainingItems);
+  }
+
+  private readGuestItems(): CartItem[] {
+    let parsed: unknown;
+
+    try {
+      parsed = JSON.parse(
+        localStorage.getItem(this.guestCartKey) ?? '[]',
+      );
+    } catch {
+      return [];
+    }
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const items: CartItem[] = [];
+
+    for (const value of parsed as unknown[]) {
+      if (typeof value !== 'object' || value === null) {
+        continue;
+      }
+
+      const item = value as Record<string, unknown>;
+
+      if (
+        typeof item['id'] !== 'number' ||
+        !Number.isInteger(item['id']) ||
+        typeof item['name'] !== 'string' ||
+        typeof item['description'] !== 'string' ||
+        typeof item['price'] !== 'number' ||
+        !Number.isFinite(item['price']) ||
+        typeof item['category'] !== 'string' ||
+        typeof item['image'] !== 'string' ||
+        typeof item['quantity'] !== 'number' ||
+        !Number.isInteger(item['quantity']) ||
+        item['quantity'] < 1
+      ) {
+        continue;
+      }
+
+      items.push({
+        id: item['id'] as number,
+        cartItemId: 0,
+        name: item['name'] as string,
+        description: item['description'] as string,
+        price: item['price'] as number,
+        category: item['category'] as string,
+        image: item['image'] as string,
+        quantity: Math.min(20, item['quantity'] as number),
+        selectedSize:
+          typeof item['selectedSize'] === 'string'
+            ? this.normalizeSize(item['selectedSize'] as string) ?? undefined
+            : undefined,
+      });
+    }
+
+    return items;
+  }
+
+  private storeGuestItems(items: CartItem[]): void {
+    try {
+      localStorage.setItem(
+        this.guestCartKey,
+        JSON.stringify(items),
+      );
+    } catch {
+      this.errorSignal.set('Unable to save your guest cart.');
+    }
+  }
+
+  private guestCart(): CartApiData {
+    const items = this.readGuestItems().map(item => ({
+      id: 0,
+      productId: item.id,
+      name: item.name,
+      description: item.description,
+      imagePath: item.image,
+      categoryName: item.category,
+      price: item.price,
+      quantity: item.quantity,
+      selectedSize: item.selectedSize ?? null,
+      lineTotal: item.price * item.quantity,
+    }));
+
+    return {
+      id: null,
+      items,
+      totalItems: items.reduce(
+        (total, item) => total + item.quantity,
+        0,
+      ),
+      subtotal: items.reduce(
+        (total, item) => total + item.lineTotal,
+        0,
+      ),
+    };
+  }
+
   private updateQuantity(item: CartItem, quantity: number): void {
     this.executeCartRequest(
       this.http.put<CartApiResponse>(
@@ -224,11 +509,20 @@ export class CartService {
     productId: number,
     selectedSize?: string,
   ): CartItem | undefined {
-    const normalizedSize = this.normalizeSize(selectedSize);
-
     return this.itemsSignal().find(item =>
+      this.isSameLine(item, productId, selectedSize),
+    );
+  }
+
+  private isSameLine(
+    item: CartItem,
+    productId: number,
+    selectedSize?: string | null,
+  ): boolean {
+    return (
       item.id === productId &&
-      this.normalizeSize(item.selectedSize) === normalizedSize,
+      this.normalizeSize(item.selectedSize) ===
+      this.normalizeSize(selectedSize)
     );
   }
 
@@ -269,7 +563,7 @@ export class CartService {
     const fallbackImage =
       'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=700&auto=format&fit=crop&q=85';
 
-    const items: CartItem[] = (cart.items ?? []).map(item => ({
+    const apiItems: CartItem[] = (cart.items ?? []).map(item => ({
       id: item.productId,
       cartItemId: item.id,
       name: item.name,
@@ -281,7 +575,35 @@ export class CartService {
       selectedSize: item.selectedSize ?? undefined,
     }));
 
-    this.itemsSignal.set(items);
+    if (this.authService.isLoggedIn()) {
+      const apiKeys = new Set(
+        apiItems.map(item =>
+          this.cartLineKey(item.id, item.selectedSize),
+        ),
+      );
+
+      const pendingGuestItems = this.readGuestItems().filter(
+        item => !apiKeys.has(
+          this.cartLineKey(item.id, item.selectedSize),
+        ),
+      );
+
+      this.itemsSignal.set([
+        ...apiItems,
+        ...pendingGuestItems,
+      ]);
+
+      return;
+    }
+
+    this.itemsSignal.set(apiItems);
+  }
+
+  private cartLineKey(
+    productId: number,
+    selectedSize?: string | null,
+  ): string {
+    return `${productId}:${this.normalizeSize(selectedSize) ?? ''}`;
   }
 
   private emptyCart(): CartApiData {
@@ -293,7 +615,9 @@ export class CartService {
     };
   }
 
-  private normalizeSize(size?: string | null): string | null {
+  private normalizeSize(
+    size?: string | null,
+  ): string | null {
     if (!size || !size.trim()) {
       return null;
     }

@@ -87,6 +87,81 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> getActiveProducts(int page, int size) {
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
+        Page<ProductResponse> result = productRepository
+                .findByActiveTrue(pageable)
+                .map(productMapper::toResponse);
+
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> getActiveByCategoryId(
+            Long categoryId, int page, int size
+    ) {
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
+        findCategoryOrThrow(categoryId);
+
+        Page<ProductResponse> result = productRepository
+                .findByActiveTrueAndCategoryId(categoryId, pageable)
+                .map(productMapper::toResponse);
+
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("product.empty");
+        }
+
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductResponse getActiveById(Long id) {
+        Product product = productRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "product.notfound",
+                        String.valueOf(id)
+                ));
+
+        return productMapper.toResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> searchActiveProducts(
+            Long categoryId, String key, int page, int size
+    ) {
+        Pageable pageable = PaginationUtil.toPageable(
+                page, size, Sort.by(Sort.Direction.ASC, "id")
+        );
+
+        if (categoryId != null) {
+            findCategoryOrThrow(categoryId);
+        }
+
+        String normalizedKey =
+                (key == null || key.isBlank()) ? null : key.trim();
+
+        Page<ProductResponse> result = productRepository
+                .searchActive(categoryId, normalizedKey, pageable)
+                .map(productMapper::toResponse);
+
+        if (result.getTotalElements() == 0) {
+            throw new EmptyResultException("product.empty");
+        }
+
+        return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getFeaturedProducts() {
         List<Product> products =
                 productRepository.findByFeaturedTrueAndActiveTrueOrderByNameAsc();

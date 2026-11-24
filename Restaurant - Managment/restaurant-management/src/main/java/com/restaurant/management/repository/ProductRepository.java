@@ -24,16 +24,47 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
 
     @Override
     @EntityGraph(attributePaths = "category")
-    Page<Product> findAll(Specification<Product> specification, Pageable pageable);
+    Page<Product> findAll(
+            Specification<Product> specification,
+            Pageable pageable
+    );
 
     @Override
     @EntityGraph(attributePaths = "category")
     Optional<Product> findById(Long id);
 
     @EntityGraph(attributePaths = "category")
-    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
+    Page<Product> findByCategoryId(
+            Long categoryId,
+            Pageable pageable
+    );
 
-    boolean existsByCategoryId(Long categoryId);
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findByActiveTrue(Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findByActiveTrueAndCategoryId(
+            Long categoryId,
+            Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = "category")
+    Optional<Product> findByIdAndActiveTrue(Long id);
+
+    @EntityGraph(attributePaths = "category")
+    @Query("""
+            select p from Product p
+            where p.active = true
+              and (:categoryId is null or p.category.id = :categoryId)
+              and (:key is null
+                   or lower(p.name) like lower(concat('%', :key, '%'))
+                   or lower(p.description) like lower(concat('%', :key, '%')))
+            """)
+    Page<Product> searchActive(
+            @Param("categoryId") Long categoryId,
+            @Param("key") String key,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = "category")
     @Query("""
@@ -54,4 +85,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
 
     @EntityGraph(attributePaths = "category")
     List<Product> findByFeaturedTrueAndActiveTrueOrderByNameAsc();
+
+    boolean existsByCategoryId(Long categoryId);
 }

@@ -32,13 +32,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final String[] CATALOG_PATHS = {
-            "/api/categories/**",
-            "/api/products/**",
-            "/api/product-details/**",
-            "/api/chefs/**"
-    };
-
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
@@ -81,7 +74,16 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                CATALOG_PATHS
+                                "/api/products/featured",
+                                "/api/products/active",
+                                "/api/products/active/**"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/categories/**",
+                                "/api/product-details/**",
+                                "/api/chefs/**"
                         ).permitAll()
 
                         .requestMatchers(
@@ -94,7 +96,6 @@ public class SecurityConfig {
                                 "/api/contact-info/my"
                         ).hasAnyRole(user, admin)
 
-                        // Reviews
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/reviews"

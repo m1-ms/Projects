@@ -51,6 +51,59 @@ public class ProductController {
         ));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getActiveProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                productService.getActiveProducts(page, size)
+        ));
+    }
+
+    @GetMapping("/active/search")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> searchActiveProducts(
+            @RequestParam(required = false)
+            @Size(max = 100, message = "{product.key.size}") String key,
+
+            @RequestParam(required = false)
+            @Positive(message = "{category.id.invalid}") Long categoryId,
+
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                productService.searchActiveProducts(categoryId, key, page, size)
+        ));
+    }
+
+    @GetMapping("/active/category/{categoryId}")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getActiveByCategory(
+            @PathVariable
+            @Positive(message = "{category.id.invalid}") Long categoryId,
+
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                productService.getActiveByCategoryId(categoryId, page, size)
+        ));
+    }
+
+    @GetMapping("/active/{id}")
+    public ResponseEntity<ApiResponse<ProductResponse>> getActiveById(
+            @PathVariable
+            @Positive(message = "{product.id.invalid}") Long id) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                productService.getActiveById(id)
+        ));
+    }
+
     @GetMapping("/featured")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getFeaturedProducts() {
         return ResponseEntity.ok(ApiResponse.success(

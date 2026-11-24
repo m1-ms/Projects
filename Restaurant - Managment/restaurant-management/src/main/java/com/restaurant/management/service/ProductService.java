@@ -12,11 +12,25 @@ public interface ProductService {
 
     PageResponse<ProductResponse> getAll(int page, int size);
 
-    PageResponse<ProductResponse> getByCategoryId(Long categoryId, int page, int size);
-
-    List<ProductResponse> getFeaturedProducts();
+    PageResponse<ProductResponse> getByCategoryId(
+            Long categoryId, int page, int size
+    );
 
     ProductResponse getById(Long id);
+
+    PageResponse<ProductResponse> getActiveProducts(int page, int size);
+
+    PageResponse<ProductResponse> getActiveByCategoryId(
+            Long categoryId, int page, int size
+    );
+
+    ProductResponse getActiveById(Long id);
+
+    PageResponse<ProductResponse> searchActiveProducts(
+            Long categoryId, String key, int page, int size
+    );
+
+    List<ProductResponse> getFeaturedProducts();
 
     ProductResponse save(ProductRequest request);
 
@@ -30,7 +44,9 @@ public interface ProductService {
 
     void deleteAll(List<Long> ids);
 
-    PageResponse<ProductResponse> search(Long categoryId, String key, int page, int size);
+    PageResponse<ProductResponse> search(
+            Long categoryId, String key, int page, int size
+    );
 
     PageResponse<ProductResponse> auditSearch(
             AuditSearchCriteria criteria,

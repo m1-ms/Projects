@@ -90,7 +90,7 @@ export class ProductDetails implements OnInit {
     this.quantity = 1;
     this.selectedSize = 'Regular';
 
-    this.productService.getProductById(id).subscribe({
+    this.productService.getActiveProductById(id).subscribe({
       next: response => {
         if (!response.success || !response.data) {
           this.errorMessage = 'Product not found.';
@@ -163,7 +163,7 @@ export class ProductDetails implements OnInit {
 
     const currentProduct = this.product;
 
-    this.productService.getProducts().subscribe({
+    this.productService.getActiveProducts(1, 50).subscribe({
       next: response => {
         const products = response.data?.content ?? [];
 

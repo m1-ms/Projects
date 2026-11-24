@@ -1,3 +1,4 @@
+
 import {
   Component,
   DestroyRef,
@@ -6,7 +7,12 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 
-import { RouterLink } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  RouterLink,
+} from '@angular/router';
+
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import {
@@ -59,6 +65,8 @@ export class Menu implements OnInit {
   private favoritesService = inject(FavoritesService);
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
@@ -96,8 +104,25 @@ export class Menu implements OnInit {
         this.loadProducts(1);
       });
 
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const requestedPage = Number(params.get('page'));
+
+        const page =
+          Number.isInteger(requestedPage) && requestedPage > 0
+            ? requestedPage
+            : 1;
+
+        if (
+          page !== this.currentPage ||
+          (this.products.length === 0 && !this.loading)
+        ) {
+          this.loadProducts(page, false);
+        }
+      });
+
     this.loadCategories();
-    this.loadProducts(1);
   }
 
   loadCategories(): void {
@@ -113,7 +138,7 @@ export class Menu implements OnInit {
             { id: null, name: 'All' },
             ...backendCategories
               .filter(
-                category => category.name.trim().toLowerCase() !== 'all'
+                category => category.name.trim().toLowerCase() !== 'all',
               )
               .map(category => ({
                 id: category.id,
@@ -136,15 +161,26 @@ export class Menu implements OnInit {
       });
   }
 
-  loadProducts(page = 1): void {
+  loadProducts(page = 1, updateUrl = true): void {
     this.productsRequest?.unsubscribe();
 
     this.currentPage = page;
+
+    if (updateUrl) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          page: page > 1 ? page : null,
+        },
+        queryParamsHandling: 'merge',
+      });
+    }
+
     this.loading = true;
     this.errorMessage = '';
 
     this.productsRequest = this.productService
-      .searchProducts(
+      .searchActiveProducts(
         this.searchTerm,
         this.selectedCategoryId,
         this.currentPage,
@@ -168,12 +204,19 @@ export class Menu implements OnInit {
         },
 
         error: error => {
-          // The backend returns 404 when the search has no results.
           if (error.status === 404) {
             this.products = [];
             this.totalElements = 0;
             this.totalPages = 0;
             this.currentPage = 1;
+
+            if (page > 1) {
+              void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { page: null },
+                queryParamsHandling: 'merge',
+              });
+            }
           } else {
             console.error('Failed to load products:', error);
 
@@ -273,7 +316,7 @@ export class Menu implements OnInit {
 
   getProductQuantity(productId: number): number {
     return this.cartService.items().find(
-      item => item.id === productId && !item.selectedSize
+      item => item.id === productId && !item.selectedSize,
     )?.quantity ?? 0;
   }
 

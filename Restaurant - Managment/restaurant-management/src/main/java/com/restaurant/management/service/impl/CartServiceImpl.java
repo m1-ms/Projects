@@ -48,7 +48,7 @@ public class CartServiceImpl implements CartService {
 
         RestaurantUser user = currentUserService.getCurrentUser();
 
-        Product product = productRepository.findById(request.getProductId())
+        Product product = productRepository.findByIdAndActiveTrue(request.getProductId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "product.notfound",
