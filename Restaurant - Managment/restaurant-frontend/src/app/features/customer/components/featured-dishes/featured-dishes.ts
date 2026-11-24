@@ -58,13 +58,13 @@ export class FeaturedDishes implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.productService.getProducts().subscribe({
+    this.productService.getFeaturedProducts().subscribe({
       next: (response) => {
-        const backendProducts = response.data?.content ?? [];
+        const backendProducts = response.data ?? [];
 
-        this.products = backendProducts
-          .slice(0, 4)
-          .map((product: Product) => this.mapProduct(product));
+        this.products = backendProducts.map(
+          (product: Product) => this.mapProduct(product),
+        );
 
         this.loading = false;
         this.cdr.detectChanges();

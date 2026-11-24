@@ -1,3 +1,4 @@
+
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -27,6 +28,21 @@ export interface CategoryApiResponse {
   data: CategoryPage;
 }
 
+export interface PopularCategory {
+  id: number;
+  name: string;
+  logo: string;
+  flag: string;
+  imagePath: string | null;
+  productCount: number;
+}
+
+export interface PopularCategoriesApiResponse {
+  success: boolean;
+  message: string;
+  data: PopularCategory[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -47,6 +63,12 @@ export class CategoryService {
     return this.http.get<CategoryApiResponse>(
       this.apiUrl,
       { params },
+    );
+  }
+
+  getPopularCategories(): Observable<PopularCategoriesApiResponse> {
+    return this.http.get<PopularCategoriesApiResponse>(
+      `${this.apiUrl}/popular`,
     );
   }
 }

@@ -12,6 +12,8 @@ export interface Product {
   categoryId: number;
   categoryName: string;
   imagePath: string | null;
+  featured: boolean;
+  active: boolean;
   createdDate?: string;
   updatedDate?: string | null;
 }
@@ -43,6 +45,12 @@ export class ProductService {
 
   getProducts(): Observable<ApiResponse<ProductPage>> {
     return this.http.get<ApiResponse<ProductPage>>(this.apiUrl);
+  }
+
+  getFeaturedProducts(): Observable<ApiResponse<Product[]>> {
+    return this.http.get<ApiResponse<Product[]>>(
+      `${this.apiUrl}/featured`,
+    );
   }
 
   searchProducts(
