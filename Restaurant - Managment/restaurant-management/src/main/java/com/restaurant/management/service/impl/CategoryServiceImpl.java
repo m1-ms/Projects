@@ -6,6 +6,7 @@ import com.restaurant.management.dto.request.CategoryRequest;
 import com.restaurant.management.dto.request.CategoryUpdateRequest;
 import com.restaurant.management.dto.response.CategoryResponse;
 import com.restaurant.management.dto.response.PageResponse;
+import com.restaurant.management.dto.response.PopularCategoryResponse;
 import com.restaurant.management.entity.Category;
 import com.restaurant.management.exception.DuplicateResourceException;
 import com.restaurant.management.exception.EmptyResultException;
@@ -51,6 +52,22 @@ public class CategoryServiceImpl implements CategoryService {
         Pageable pageable = PaginationUtil.toPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
         Page<CategoryResponse> result = categoryRepository.findAll(pageable).map(categoryMapper::toResponse);
         return PageResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PopularCategoryResponse> getPopularCategories() {
+        return categoryRepository.findPopularCategories()
+                .stream()
+                .map(category -> PopularCategoryResponse.builder()
+                        .id(category.getId())
+                        .name(category.getName())
+                        .logo(category.getLogo())
+                        .flag(category.getFlag())
+                        .imagePath(category.getImagePath())
+                        .productCount(category.getProductCount())
+                        .build())
+                .toList();
     }
 
     @Override

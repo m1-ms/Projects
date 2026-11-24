@@ -6,6 +6,7 @@ import com.restaurant.management.dto.request.CategoryUpdateRequest;
 import com.restaurant.management.dto.response.ApiResponse;
 import com.restaurant.management.dto.response.CategoryResponse;
 import com.restaurant.management.dto.response.PageResponse;
+import com.restaurant.management.dto.response.PopularCategoryResponse;
 import com.restaurant.management.service.CategoryService;
 import com.restaurant.management.util.MessageService;
 import jakarta.validation.Valid;
@@ -46,6 +47,13 @@ public class CategoryController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success(
                 messages.get("success.retrieved"), categoryService.getAll(page, size)));
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<ApiResponse<List<PopularCategoryResponse>>> getPopularCategories() {
+        return ResponseEntity.ok(ApiResponse.success(
+                messages.get("success.retrieved"),
+                categoryService.getPopularCategories()));
     }
 
     @GetMapping("/search")

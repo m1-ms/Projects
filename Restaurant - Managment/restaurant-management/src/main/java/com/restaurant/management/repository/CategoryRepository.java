@@ -27,4 +27,34 @@ public interface CategoryRepository extends JpaRepository<Category, Long>, JpaSp
 
     List<Category> findTop5ByOrderByIdDesc();
 
+
+    @Query("""
+            select c.id as id,
+                   c.name as name,
+                   c.logo as logo,
+                   c.flag as flag,
+                   c.imagePath as imagePath,
+                   count(p.id) as productCount
+            from Category c
+            left join c.products p
+            where c.popular = true
+            group by c.id, c.name, c.logo, c.flag, c.imagePath
+            order by c.name
+            """)
+    List<PopularCategoryView> findPopularCategories();
+
+    interface PopularCategoryView {
+        Long getId();
+
+        String getName();
+
+        String getLogo();
+
+        String getFlag();
+
+        String getImagePath();
+
+        Long getProductCount();
+    }
+
 }

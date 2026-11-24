@@ -1,3 +1,4 @@
+
 package com.restaurant.management.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
@@ -24,4 +25,9 @@ public class CategoryRequest {
     @NotBlank(message = "{category.flag.required}")
     @Size(max = 50, message = "{category.flag.size}")
     private String flag;
+
+    @Size(max = 255, message = "{category.image.size}")
+    private String imagePath;
+
+    private Boolean popular;
 }

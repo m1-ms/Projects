@@ -5,6 +5,7 @@ import com.restaurant.management.dto.request.CategoryRequest;
 import com.restaurant.management.dto.request.CategoryUpdateRequest;
 import com.restaurant.management.dto.response.CategoryResponse;
 import com.restaurant.management.dto.response.PageResponse;
+import com.restaurant.management.dto.response.PopularCategoryResponse;
 
 import java.util.List;
 
@@ -21,6 +22,8 @@ public interface CategoryService {
     CategoryResponse update(CategoryUpdateRequest request);
 
     List<CategoryResponse> updateAll(List<CategoryUpdateRequest> requests);
+
+    List<PopularCategoryResponse> getPopularCategories();
 
     void delete(Long id);
 

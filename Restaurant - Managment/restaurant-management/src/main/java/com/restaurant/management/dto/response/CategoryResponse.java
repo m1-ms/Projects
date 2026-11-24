@@ -1,3 +1,4 @@
+
 package com.restaurant.management.dto.response;
 
 import lombok.Builder;
@@ -16,6 +17,8 @@ public class CategoryResponse implements Serializable {
     private final String name;
     private final String logo;
     private final String flag;
+    private final String imagePath;
+    private final boolean popular;
     private final LocalDateTime createdDate;
     private final LocalDateTime updatedDate;
     private final String createdBy;

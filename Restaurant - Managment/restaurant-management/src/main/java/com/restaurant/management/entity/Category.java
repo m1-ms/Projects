@@ -1,3 +1,4 @@
+
 package com.restaurant.management.entity;
 
 import jakarta.persistence.Column;
@@ -33,6 +34,12 @@ public class Category extends BaseAuditEntity {
 
     @Column(name = "flag", length = 50)
     private String flag;
+
+    @Column(name = "image_path", length = 255)
+    private String imagePath;
+
+    @Column(name = "is_popular", nullable = false)
+    private boolean popular = false;
 
     @OneToMany(mappedBy = "category")
     private List<Product> products = new ArrayList<>();

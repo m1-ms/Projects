@@ -1,3 +1,4 @@
+
 package com.restaurant.management.mapper;
 
 import com.restaurant.management.dto.request.CategoryRequest;
@@ -20,6 +21,15 @@ public class CategoryMapper {
         category.setName(request.getName().trim());
         category.setLogo(request.getLogo().trim());
         category.setFlag(request.getFlag().trim());
+
+        if (request.getImagePath() != null) {
+            String imagePath = request.getImagePath().trim();
+            category.setImagePath(imagePath.isEmpty() ? null : imagePath);
+        }
+
+        if (request.getPopular() != null) {
+            category.setPopular(request.getPopular());
+        }
     }
 
     public CategoryResponse toResponse(Category category) {
@@ -28,6 +38,8 @@ public class CategoryMapper {
                 .name(category.getName())
                 .logo(category.getLogo())
                 .flag(category.getFlag())
+                .imagePath(category.getImagePath())
+                .popular(category.isPopular())
                 .createdDate(category.getCreatedDate())
                 .updatedDate(category.getUpdatedDate())
                 .createdBy(category.getCreatedBy())
